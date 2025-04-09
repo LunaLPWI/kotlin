@@ -12,6 +12,9 @@ appcompat = "1.7.0"
 recyclerview = "1.4.0"
 constraintlayout = "2.2.1"
 cardview = "1.0.0"
+navigationRuntimeAndroid = "2.9.0-alpha09"
+navigationRuntimeDesktop = "2.9.0-alpha09"
+navigationRuntimeKtx = "2.8.9"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,6 +35,9 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
+androidx-navigation-runtime-android = { group = "androidx.navigation", name = "navigation-runtime-android", version.ref = "navigationRuntimeAndroid" }
+androidx-navigation-runtime-desktop = { group = "androidx.navigation", name = "navigation-runtime-desktop", version.ref = "navigationRuntimeDesktop" }
+androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

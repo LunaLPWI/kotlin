@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.luna_project.ui.theme.components.BarberShopCard
 import com.example.luna_project.ui.theme.components.RightDrawerContent
 import com.example.luna_project.ui.theme.components.SearchBar
@@ -43,7 +44,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-fun MainScreen() {
+fun MainScreen(navController: NavController) {
     var isDrawerOpen by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -137,7 +138,11 @@ fun MainScreen() {
                     .background(Color.White)
                     .padding(16.dp)
             ) {
-                RightDrawerContent { isDrawerOpen = false }
+
+                RightDrawerContent(
+                    onCloseDrawer = { isDrawerOpen = false },
+                    navController = navController
+                )
             }
         }
     }
@@ -156,3 +161,5 @@ fun BarberShopList() {
         }
     }
 }
+
+
