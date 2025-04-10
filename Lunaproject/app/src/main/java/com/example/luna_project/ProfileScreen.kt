@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
@@ -32,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -40,13 +43,17 @@ import androidx.navigation.NavController
 import com.example.luna_project.R
 
 @Composable
-fun profileScreen(navController: NavController) {
-    Box(modifier = Modifier.fillMaxSize()) {
+fun ProfileScreen(navController: NavController) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 16.dp) // Adiciona espaço na parte inferior
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-                .align(Alignment.TopCenter),
+                .verticalScroll(rememberScrollState()), // Adiciona scroll quando necessário
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Ícone de fechar
@@ -55,9 +62,7 @@ fun profileScreen(navController: NavController) {
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Start
             ) {
-                IconButton(onClick = {
-                    navController.navigate("home")
-                }) {
+                IconButton(onClick = { navController.navigate("home") }) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Fechar"
@@ -128,8 +133,7 @@ fun profileScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = {
-                        },
+                        onClick = { /* Ação do botão */ },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                     ) {
@@ -141,7 +145,6 @@ fun profileScreen(navController: NavController) {
     }
 }
 
-
 @Composable
 fun ProfileField(label: String, hint: String) {
     var text by remember { mutableStateOf(TextFieldValue("")) }
@@ -150,16 +153,21 @@ fun ProfileField(label: String, hint: String) {
         Text(text = label, color = Color.White)
         OutlinedTextField(
             value = text,
-            onValueChange = { newValue ->
-                text = newValue
-            },
-            placeholder = { Text(hint) },
+            onValueChange = { newValue -> text = newValue },
+            placeholder = { Text(hint, color = Color.Gray) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
+            textStyle = TextStyle(color = Color.Black),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                disabledContainerColor = Color.White
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black,
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
+                cursorColor = Color.Black,
+                focusedPlaceholderColor = Color.Gray,
+                unfocusedPlaceholderColor = Color.Gray
             )
         )
     }
