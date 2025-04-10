@@ -64,7 +64,8 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit, navController: NavController) 
         }
 
         MenuButton(icon = Icons.Default.Favorite, label = "Favoritos") {
-            // Exemplo de navegação futura
+            navController.navigate("favorite")
+            onCloseDrawer()
         }
 
         Spacer(modifier = Modifier.weight(1f))

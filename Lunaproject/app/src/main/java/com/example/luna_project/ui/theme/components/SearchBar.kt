@@ -1,5 +1,6 @@
 package com.example.luna_project.ui.theme.components
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,28 +21,41 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
+
+
+
 @Composable
 fun SearchBar(modifier: Modifier = Modifier) {
-    var text by remember { mutableStateOf(TextFieldValue("")) }
+    var text by remember { mutableStateOf("") } // Simplificado para String
 
     TextField(
         value = text,
-        onValueChange = { newValue ->
-            text = newValue
-        },
-        placeholder = { Text(text = "Pesquisar") },
+        onValueChange = { text = it },
+        placeholder = { Text("Pesquisar", color = Color.Gray) },
         leadingIcon = {
-            Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Ícone de pesquisa",
+                tint = Color.Black
+            )
         },
         shape = RoundedCornerShape(16.dp),
-        modifier = modifier.padding(8.dp),
-        colors = TextFieldDefaults.textFieldColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            cursorColor = MaterialTheme.colorScheme.primary,
+        modifier = modifier
+            .padding(8.dp)
+            .fillMaxWidth(),
+        colors = TextFieldDefaults.colors(
+            // Nomes atuais dos parâmetros (versão mais recente do Material 3)
+            unfocusedContainerColor = Color.White,
+            focusedContainerColor = Color.White,
+            unfocusedTextColor = Color.Black,
+            focusedTextColor = Color.Black,
+            cursorColor = Color.Black,
+            unfocusedIndicatorColor = Color.Transparent,
             focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
+            unfocusedPlaceholderColor = Color.Gray,
+            focusedPlaceholderColor = Color.Gray,
+            unfocusedLeadingIconColor = Color.Black,
+            focusedLeadingIconColor = Color.Black
         )
     )
 }
-
