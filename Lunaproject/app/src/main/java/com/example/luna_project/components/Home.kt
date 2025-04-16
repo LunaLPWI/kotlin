@@ -1,8 +1,5 @@
-package com.example.luna_project
+package com.example.luna_project.components
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
@@ -58,28 +55,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.luna_project.ui.theme.LunaprojectTheme
+import com.example.luna_project.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            LunaprojectTheme {
-                MainScreen()
-            }
-        }
-    }
-}
-
 @Composable
-fun MainScreen() {
+fun HomeScreenComponents() {
     var isDrawerOpen by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -217,7 +201,7 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit) {
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = { /* Opção de sair */ },
+            onClick = { },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E004F))
         ) {
@@ -285,7 +269,9 @@ fun LastVisitCard() {
                 contentScale = ContentScale.Crop
             )
 
-            Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+            Column(modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)) {
                 Text(text = "Derick Augusto", color = Color.White)
                 Text(text = "Dom Roque", color = Color.Gray)
             }
@@ -341,10 +327,4 @@ fun BarberShopCard() {
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewMainScreen() {
-    MainScreen()
 }
