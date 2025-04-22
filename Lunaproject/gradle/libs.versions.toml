@@ -14,6 +14,9 @@ constraintlayout = "2.2.1"
 cardview = "1.0.0"
 material = "1.10.0"
 activity = "1.8.0"
+navigationRuntimeAndroid = "2.9.0-alpha09"
+navigationRuntimeDesktop = "2.9.0-alpha09"
+navigationRuntimeKtx = "2.8.9"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
