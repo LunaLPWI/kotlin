@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.luna_project.ui.theme.activities.LoginActivity
+import com.example.luna_project.ui.theme.activities.TokenActivity
 
 @Composable
 fun ForgotPasswordScreen() {
@@ -47,7 +48,6 @@ fun ForgotPasswordScreen() {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Campo para inserir email
         BasicTextField(email) { email = it }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -68,11 +68,13 @@ fun ForgotPasswordScreen() {
                 Text("Voltar", color = Color(0xFF240C51))
             }
 
-            Button(
+            OutlinedButton(
                 onClick = {
+                    val intent = Intent(context, TokenActivity::class.java)
+                    context.startActivity(intent)
                 },
                 shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF240C51))
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color(0xFF240C51)),
             ) {
                 Text("Enviar", color = Color.White)
             }

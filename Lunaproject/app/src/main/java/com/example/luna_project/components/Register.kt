@@ -52,12 +52,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.luna_project.models.RegisterViewModel
 import com.example.luna_project.ui.theme.activities.LoginActivity
 
 @Composable
-fun RegisterScreen(viewModel: RegisterViewModel = viewModel()) {
+fun RegisterScreen() {
     var nome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var emailError by remember { mutableStateOf(false) }
@@ -97,7 +95,8 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel()) {
         CustomTextField(
             value = nome,
             onValueChange = { nome = it.take(30) },
-            placeholder = "Nome completo")
+            placeholder = "Nome completo"
+        )
 
         CustomTextField(
             value = email,
@@ -165,9 +164,11 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel()) {
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+        Row(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
             OutlinedButton(
                 onClick = {
                     val intent = Intent(context, LoginActivity::class.java)
@@ -186,11 +187,14 @@ fun RegisterScreen(viewModel: RegisterViewModel = viewModel()) {
             Button(
                 onClick = {
                     if (isFormValid) {
-                        // TODO: salvar no banco ou chamar API
                         val intent = Intent(context, LoginActivity::class.java)
                         context.startActivity(intent)
                     } else {
-                        Toast.makeText(context, "Por favor, corrija os erros no formulário.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "Por favor, corrija os erros no formulário.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 shape = RoundedCornerShape(8.dp),
@@ -217,6 +221,7 @@ fun PasswordFieldWithCriteria(senha: String, onSenhaChange: (String) -> Unit) {
                 is FocusInteraction.Focus -> {
                     isSenhaFocused = true
                 }
+
                 is FocusInteraction.Unfocus -> {
                     isSenhaFocused = false
                 }
@@ -225,7 +230,10 @@ fun PasswordFieldWithCriteria(senha: String, onSenhaChange: (String) -> Unit) {
     }
 
     LaunchedEffect(senha) {
-        isPasswordValid = isPasswordLengthValid(senha) && hasUppercase(senha) && hasDigit(senha) && hasSpecialChar(senha)
+        isPasswordValid =
+            isPasswordLengthValid(senha) && hasUppercase(senha) && hasDigit(senha) && hasSpecialChar(
+                senha
+            )
     }
 
     Column {
@@ -243,14 +251,22 @@ fun PasswordFieldWithCriteria(senha: String, onSenhaChange: (String) -> Unit) {
                         color = Color(36, 12, 81)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    PasswordRequirement("6 ou mais caracteres",
-                        isPasswordLengthValid(senha))
-                    PasswordRequirement("Pelo menos uma letra maiúscula",
-                        hasUppercase(senha))
-                    PasswordRequirement("Pelo menos um número",
-                        hasDigit(senha))
-                    PasswordRequirement("Pelo menos um Caractere especial",
-                        hasSpecialChar(senha))
+                    PasswordRequirement(
+                        "6 ou mais caracteres",
+                        isPasswordLengthValid(senha)
+                    )
+                    PasswordRequirement(
+                        "Pelo menos uma letra maiúscula",
+                        hasUppercase(senha)
+                    )
+                    PasswordRequirement(
+                        "Pelo menos um número",
+                        hasDigit(senha)
+                    )
+                    PasswordRequirement(
+                        "Pelo menos um Caractere especial",
+                        hasSpecialChar(senha)
+                    )
                 }
             }
         }
@@ -339,15 +355,15 @@ fun CustomTextField(
 }
 
 
-
-
 fun isPasswordLengthValid(password: String): Boolean = password.length >= 6
 fun hasUppercase(password: String): Boolean = password.contains(Regex(".*[A-Z].*"))
 fun hasDigit(password: String): Boolean = password.contains(Regex(".*[0-9].*"))
 fun hasSpecialChar(password: String): Boolean = password.contains(Regex(".*[!@#\$%^&*()_+=-].*"))
 
 fun isPasswordValid(password: String): Boolean {
-    return isPasswordLengthValid(password) && hasUppercase(password) && hasDigit(password) && hasSpecialChar(password)
+    return isPasswordLengthValid(password) && hasUppercase(password) && hasDigit(password) && hasSpecialChar(
+        password
+    )
 }
 
 
