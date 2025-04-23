@@ -26,14 +26,14 @@ fun BarberShopCard() {
             .padding(horizontal = 8.dp)
     ) {
         Column {
-            Image(
-                painter = painterResource(id = R.drawable.barber_shop_image),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentScale = ContentScale.Crop
-            )
+//            Image(
+//                painter = painterResource(id = R.drawable.barber_shop_image),
+//                contentDescription = null,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(200.dp),
+//                contentScale = ContentScale.Crop
+//            )
 
             Text(
                 text = "Dom Roque",

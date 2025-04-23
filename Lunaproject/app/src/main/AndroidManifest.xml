@@ -24,6 +24,9 @@
             android:name=".ui.theme.activities.TokenActivity"
             android:exported="true" />
         <activity
+            android:name=".ui.theme.activities.ProfileActivity"
+            android:exported="true" />
+        <activity
             android:name=".ui.theme.activities.ForgotPasswordActivity"
             android:exported="true" />
         <activity

@@ -1,3 +1,4 @@
+import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,16 +32,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.luna_project.MainScreen
 import com.example.luna_project.R
+import com.example.luna_project.ui.theme.activities.MainActivity
 
 @Composable
-fun profileScreen(navController: NavController) {
+fun ProfileScreen() {
+    val context = LocalContext.current
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -56,7 +62,8 @@ fun profileScreen(navController: NavController) {
                 horizontalArrangement = Arrangement.Start
             ) {
                 IconButton(onClick = {
-                    navController.navigate("home")
+                    val intent = Intent(context, MainActivity::class.java)
+                    context.startActivity(intent)
                 }) {
                     Icon(
                         imageVector = Icons.Default.Close,
@@ -74,14 +81,14 @@ fun profileScreen(navController: NavController) {
             )
 
             // Imagem do perfil
-            Image(
-                painter = painterResource(id = R.drawable.ic_user),
-                contentDescription = "Foto do perfil",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(RoundedCornerShape(60.dp))
-            )
+//            Image(
+//                painter = painterResource(id = R.drawable.ic_user),
+//                contentDescription = "Foto do perfil",
+//                contentScale = ContentScale.Crop,
+//                modifier = Modifier
+//                    .size(120.dp)
+//                    .clip(RoundedCornerShape(60.dp))
+//            )
 
             // Card com informações
             Card(

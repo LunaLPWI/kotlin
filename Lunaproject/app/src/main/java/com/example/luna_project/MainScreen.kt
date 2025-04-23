@@ -44,7 +44,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-fun MainScreen(navController: NavController) {
+fun MainScreen() {
     var isDrawerOpen by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -140,8 +140,7 @@ fun MainScreen(navController: NavController) {
             ) {
 
                 RightDrawerContent(
-                    onCloseDrawer = { isDrawerOpen = false },
-                    navController = navController
+                    onCloseDrawer = { isDrawerOpen = false }
                 )
             }
         }
@@ -156,7 +155,7 @@ fun BarberShopList() {
         contentPadding = PaddingValues(horizontal = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(10) { // Substitua pela lista de dados
+        items(10) {
             BarberShopCard()
         }
     }

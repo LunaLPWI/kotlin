@@ -29,14 +29,14 @@ fun LastVisitCard() {
             modifier = Modifier.padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_user),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(20.dp)),
-                contentScale = ContentScale.Crop
-            )
+//            Image(
+//                painter = painterResource(id = R.drawable.ic_user),
+//                contentDescription = null,
+//                modifier = Modifier
+//                    .size(40.dp)
+//                    .clip(RoundedCornerShape(20.dp)),
+//                contentScale = ContentScale.Crop
+//            )
 
             Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
                 Text(text = "Derick Augusto", color = Color.White)
