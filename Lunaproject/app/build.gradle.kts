@@ -1,3 +1,6 @@
+import org.gradle.kotlin.dsl.debugImplementation
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -41,6 +44,19 @@ android {
 
 dependencies {
 
+
+
+    implementation("androidx.compose.ui:ui:1.4.1")
+    implementation("androidx.compose.material3:material3:1.0.0")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.4.1")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.4.1")
+    implementation ("androidx.compose.ui:ui:1.0.5")
+    implementation ("androidx.compose.material:material:1.0.5")
+    implementation ("androidx.compose.material:material-icons-core:1.0.5")
+    implementation ("androidx.compose.material:material-icons-extended:1.0.5")
+    implementation ("androidx.compose.material3:material3:1.0.0-alpha01")
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.0.5")
+    implementation ("org.osmdroid:osmdroid-android:6.1.11")
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation ("androidx.compose.material3:material3:1.0.1")
