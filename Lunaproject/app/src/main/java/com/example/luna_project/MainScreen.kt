@@ -35,9 +35,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.luna_project.ui.theme.components.BarberShopCard
 import com.example.luna_project.ui.theme.components.RightDrawerContent
+import com.example.luna_project.ui.theme.components.RightDrawerContentNotification
 import com.example.luna_project.ui.theme.components.SearchBar
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -46,6 +46,7 @@ import java.util.Locale
 @Composable
 fun MainScreen() {
     var isDrawerOpen by remember { mutableStateOf(false) }
+    var isDrawerNotificationOpen by  remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -95,7 +96,9 @@ fun MainScreen() {
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { /* Ação de notificação */ }) {
+            IconButton(onClick = {
+                isDrawerNotificationOpen = true
+            }) {
                 Icon(
                     imageVector = Icons.Default.Notifications,
                     contentDescription = "Notificação"
@@ -110,12 +113,12 @@ fun MainScreen() {
             }
         }
 
-        if (isDrawerOpen) {
+        if (isDrawerOpen || isDrawerNotificationOpen) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.5f))
-                    .clickable { isDrawerOpen = false }
+                    .clickable { isDrawerOpen = false || isDrawerNotificationOpen}
             )
         }
 
@@ -141,6 +144,33 @@ fun MainScreen() {
 
                 RightDrawerContent(
                     onCloseDrawer = { isDrawerOpen = false }
+                )
+            }
+        }
+
+
+        AnimatedVisibility(
+            visible = isDrawerNotificationOpen,
+            enter = slideInHorizontally(
+                initialOffsetX = { it },
+                animationSpec = tween(durationMillis = 100)
+            ),
+            exit = slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = tween(durationMillis = 100)
+            ),
+            modifier = Modifier.align(Alignment.CenterEnd)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(300.dp)
+                    .background(Color.White)
+                    .padding(16.dp)
+            ) {
+
+                RightDrawerContentNotification(
+                    onCloseDrawer = { isDrawerNotificationOpen = false }
                 )
             }
         }

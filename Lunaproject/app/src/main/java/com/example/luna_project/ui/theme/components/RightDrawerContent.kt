@@ -1,6 +1,14 @@
 package com.example.luna_project.ui.theme.components
 
 import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,17 +16,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,7 +68,6 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         MenuButton(icon = Icons.Default.Person, label = "Perfil") {
-            // Inicie a Activity diretamente no onClick aqui
             val intent = Intent(context, ProfileActivity::class.java)
             context.startActivity(intent)
         }
@@ -79,6 +92,105 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit) {
     }
 }
 
+
+@Composable
+fun RightDrawerContentNotification(onCloseDrawer: () -> Unit) {
+    var showNotification by remember { mutableStateOf(true) }
+
+    Column(
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            IconButton(onClick = onCloseDrawer) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Fechar"
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = "Notificações",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        AnimatedVisibility(
+            visible = showNotification,
+            enter = slideInHorizontally(initialOffsetX = { -it }),
+            exit = slideOutHorizontally(targetOffsetX = { it })
+        ) {
+            NotificationCard(
+                title = "Dom Roque Barbearia",
+                message = "E aí, Pedro! Gostou do seu corte na Dom Roque? Responda com uma nota de 1 a 5 ⭐ para nos ajudar a melhorar!",
+                onConfirm = { showNotification = false }
+            )
+        }
+    }
+}
+
+@Composable
+fun NotificationCard(title: String, message: String, onConfirm: () -> Unit) {
+    var selectedStars by remember { mutableStateOf(0) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .background(Color(0xFF2E004F), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+            .padding(16.dp)
+    ) {
+        Text(
+            text = title,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = message,
+            color = Color.White
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        RatingStars(selectedStars) { stars -> selectedStars = stars }
+
+        if (selectedStars > 0) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onConfirm,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
+            ) {
+                Text("Confirmar", color = Color(36, 12, 81))
+            }
+        }
+    }
+}
+
+@Composable
+fun RatingStars(selectedStars: Int, onRatingSelected: (Int) -> Unit) {
+    Row {
+        repeat(5) { index ->
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = "Star",
+                tint = if (index < selectedStars) Color.Yellow else Color.White,
+                modifier = Modifier
+                    .padding(6.dp)
+                    .clickable { onRatingSelected(index + 1) }
+            )
+        }
+    }
+}
 @Composable
 fun MenuButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     Button(
