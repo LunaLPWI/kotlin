@@ -1,9 +1,12 @@
 package com.example.luna_project.components
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,6 +39,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,17 +47,24 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import com.example.luna_project.R
 import com.example.luna_project.ui.theme.activities.MainActivity
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -119,18 +131,24 @@ fun Content() {
     Column(modifier = Modifier.fillMaxSize()) {
         SearchBar()
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-
-        OsmdroidMapView(
+        Box(
             modifier = Modifier
-                .weight(1f)
-                .zIndex(1f)
-        )
+                .fillMaxWidth()
+                .height(350.dp) // Ajuste conforme necessário para incluir mapa + parte da imagem visível
+        ) {
+            OsmdroidMapView(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(0f)
+            )
+
+            ExpandableBarberImage() // já tem offset de 100.dp configurado internamente
+        }
 
         BarberInfo(showReviews, onShowReviewsChange = { showReviews = it })
     }
 }
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -186,67 +204,73 @@ fun OsmdroidMapView(modifier: Modifier = Modifier) {
 
 @Composable
 fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(36, 12, 81).copy(alpha = 0.95f))
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+
+
+    Column {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(36, 12, 81).copy(alpha = 0.95f))
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Dom Roque", color = Color.White, fontSize = 24.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("⭐ 4.8 (1238)", color = Color.White)
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("9:00 - 22:00", color = Color.White)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Aberta agora", color = Color.Green)
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text("2.3 Km", color = Color.White)
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                .padding(16.dp)
         ) {
             Column {
-                Text("Dom Roque", color = Color.White, fontSize = 24.sp)
-                Spacer(modifier = Modifier.height(12.dp))
-                Text("⭐ 4.8 (1238)", color = Color.White)
-            }
-
-            Column(horizontalAlignment = Alignment.End) {
-                Text("9:00 - 22:00", color = Color.White)
+                ButtonBar(showReviews, onShowReviewsChange)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Aberta agora", color = Color.Green)
-                Spacer(modifier = Modifier.height(10.dp))
-                Text("2.3 Km", color = Color.White)
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-    }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-            .padding(16.dp)
-    ) {
-        Column {
-            ButtonBar(showReviews, onShowReviewsChange)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (showReviews) {
-                ReviewsContent()
-            } else {
-                Text(
-                    "Endereço: R. Prof. Atílio Innocenti, 731 - Vila Nova Conceição, São Paulo - SP, 04538-001",
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Telefone: (11)95689-1314", color = Color.Black)
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = { },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(36, 12, 81))
-                ) {
-                    Text("Agendar serviços", color = Color.White)
+                if (showReviews) {
+                    ReviewsContent()
+                } else {
+                    Text(
+                        "Endereço: R. Prof. Atílio Innocenti, 731 - Vila Nova Conceição, São Paulo - SP, 04538-001",
+                        color = Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Telefone: (11)95689-1314", color = Color.Black)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = { },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(36, 12, 81))
+                    ) {
+                        Text("Agendar serviços", color = Color.White)
+                    }
                 }
             }
         }
+
     }
 }
+
 
 
 @Composable
@@ -316,6 +340,63 @@ fun ReviewItem(name: String, rating: Int, date: String, review: String) {
         Text(text = review, color = Color.LightGray, fontSize = 14.sp)
     }
 }
+
+
+@SuppressLint("UnrememberedMutableState")
+@Composable
+fun ExpandableBarberImage() {
+    val minHeight = 200.dp
+    val maxHeight = 500.dp
+
+    val density = LocalDensity.current
+    val minOffset = with(density) { 320.dp.toPx() }
+    val maxOffset = with(density) { -1.dp.toPx() }
+
+    val offsetY = remember { Animatable(minOffset) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val expandedHeight by derivedStateOf {
+        lerp(minHeight, maxHeight, (minOffset - offsetY.value) / (minOffset - maxOffset))
+    }
+
+    Column (
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(expandedHeight)
+            .offset { IntOffset(0, offsetY.value.toInt()) }
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        val newOffset = (offsetY.value + dragAmount.y).coerceIn(maxOffset, minOffset)
+                        coroutineScope.launch {
+                            offsetY.snapTo(newOffset)
+                        }
+                    },
+                    onDragEnd = {
+                        coroutineScope.launch {
+                            if (offsetY.value < (maxOffset / 2)) {
+                                offsetY.animateTo(maxOffset)
+                            } else {
+                                offsetY.animateTo(minOffset)
+                            }
+                        }
+                    }
+                )
+            }
+            .clip(RoundedCornerShape(24.dp))
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.barber_shop_image),
+            contentDescription = "Imagem da Barbearia",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+
+
 
 
 

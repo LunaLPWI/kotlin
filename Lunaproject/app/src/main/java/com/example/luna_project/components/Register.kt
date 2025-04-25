@@ -354,34 +354,6 @@ fun CustomTextField(
     }
 }
 
-
-fun isPasswordLengthValid(password: String): Boolean = password.length >= 6
-fun hasUppercase(password: String): Boolean = password.contains(Regex(".*[A-Z].*"))
-fun hasDigit(password: String): Boolean = password.contains(Regex(".*[0-9].*"))
-fun hasSpecialChar(password: String): Boolean = password.contains(Regex(".*[!@#\$%^&*()_+=-].*"))
-
-fun isPasswordValid(password: String): Boolean {
-    return isPasswordLengthValid(password) && hasUppercase(password) && hasDigit(password) && hasSpecialChar(
-        password
-    )
-}
-
-
-fun isCpfValid(cpf: String): Boolean {
-    if (cpf.length != 11 || cpf.all { it == cpf[0] }) return false
-
-    try {
-        val numbers = cpf.map { it.toString().toInt() }
-
-        val firstDigit = (0..8).sumOf { (10 - it) * numbers[it] } * 10 % 11 % 10
-        val secondDigit = (0..9).sumOf { (11 - it) * numbers[it] } * 10 % 11 % 10
-
-        return numbers[9] == firstDigit && numbers[10] == secondDigit
-    } catch (e: Exception) {
-        return false
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PhoneNumberWithDddSelector(
@@ -450,4 +422,32 @@ fun PhoneNumberWithDddSelector(
 @Composable
 fun PreviewPhoneNumberWithDddSelector() {
     PhoneNumberWithDddSelector(phoneNumber = "", onPhoneNumberChange = {})
+}
+
+
+fun isPasswordLengthValid(password: String): Boolean = password.length >= 6
+fun hasUppercase(password: String): Boolean = password.contains(Regex(".*[A-Z].*"))
+fun hasDigit(password: String): Boolean = password.contains(Regex(".*[0-9].*"))
+fun hasSpecialChar(password: String): Boolean = password.contains(Regex(".*[!@#\$%^&*()_+=-].*"))
+
+fun isPasswordValid(password: String): Boolean {
+    return isPasswordLengthValid(password) && hasUppercase(password) && hasDigit(password) && hasSpecialChar(
+        password
+    )
+}
+
+
+fun isCpfValid(cpf: String): Boolean {
+    if (cpf.length != 11 || cpf.all { it == cpf[0] }) return false
+
+    try {
+        val numbers = cpf.map { it.toString().toInt() }
+
+        val firstDigit = (0..8).sumOf { (10 - it) * numbers[it] } * 10 % 11 % 10
+        val secondDigit = (0..9).sumOf { (11 - it) * numbers[it] } * 10 % 11 % 10
+
+        return numbers[9] == firstDigit && numbers[10] == secondDigit
+    } catch (e: Exception) {
+        return false
+    }
 }

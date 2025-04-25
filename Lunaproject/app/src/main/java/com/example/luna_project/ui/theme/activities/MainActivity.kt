@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             LunaprojectTheme {
-                MainScreen()
+                LunaBookApp()
             }
         }
     }
@@ -26,5 +26,5 @@ class MainActivity : ComponentActivity() {
 @Preview(showBackground = true)
 @Composable
 fun PreviewMainScreen() {
-    MainScreen()
+    LunaBookApp()
 }
