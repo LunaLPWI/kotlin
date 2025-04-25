@@ -1,18 +1,21 @@
 package com.example.luna_project.components
 
+import android.content.Context
 import android.content.Intent
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -24,9 +27,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
@@ -37,13 +42,21 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import com.example.luna_project.R
 import com.example.luna_project.ui.theme.activities.MainActivity
+import org.osmdroid.config.Configuration
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,32 +114,78 @@ fun AppBar() {
 
 @Composable
 fun Content() {
+    var showReviews by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxSize()) {
         SearchBar()
-        Box(modifier = Modifier.weight(1f)) {
-            // OsmdroidMapView() - Se necessário
-        }
-        BarberInfo()
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+
+        OsmdroidMapView(
+            modifier = Modifier
+                .weight(1f)
+                .zIndex(1f)
+        )
+
+        BarberInfo(showReviews, onShowReviewsChange = { showReviews = it })
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchBar() {
-    var searchText by remember { mutableStateOf("") }
+    var text by remember { mutableStateOf(TextFieldValue("")) }
 
-    OutlinedTextField(
-        value = searchText,
-        onValueChange = { searchText = it },
-        placeholder = { Text("Pesquisar") },
-        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
+    TextField(
+        value = text,
+        onValueChange = { newValue ->
+            text = newValue
+        },
+        placeholder = { Text(text = "Pesquisar") },
+        leadingIcon = {
+            Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
+        },
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+                .padding(8.dp),
+        colors = TextFieldDefaults.textFieldColors(
+            containerColor = Color(0xFFF6F6F6),
+            cursorColor = MaterialTheme.colorScheme.primary,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        )
     )
 }
 
 @Composable
-fun BarberInfo() {
+fun OsmdroidMapView(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    Configuration.getInstance().load(
+        context,
+        context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE)
+    )
+
+    AndroidView(
+        factory = { ctx ->
+            MapView(ctx).apply {
+                setMultiTouchControls(true)
+                controller.setZoom(15.0)
+                controller.setCenter(GeoPoint(-23.5505, -46.6333))
+                clipToOutline = true
+            }
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .clipToBounds()
+    )
+}
+
+
+
+@Composable
+fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -139,7 +198,7 @@ fun BarberInfo() {
         ) {
             Column {
                 Text("Dom Roque", color = Color.White, fontSize = 24.sp)
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text("⭐ 4.8 (1238)", color = Color.White)
             }
 
@@ -161,49 +220,115 @@ fun BarberInfo() {
             .padding(16.dp)
     ) {
         Column {
-            ButtonBar()
+            ButtonBar(showReviews, onShowReviewsChange)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                "Endereço: R. Prof. Atílio Innocenti, 731 - Vila Nova Conceição, São Paulo - SP, 04538-001",
-                color = Color.Black
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Telefone: (11)95689-1314", color = Color.Black)
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = { },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(36, 12, 81))
-            ) {
-                Text("Agendar serviços", color = Color.White)
+
+            if (showReviews) {
+                ReviewsContent()
+            } else {
+                Text(
+                    "Endereço: R. Prof. Atílio Innocenti, 731 - Vila Nova Conceição, São Paulo - SP, 04538-001",
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Telefone: (11)95689-1314", color = Color.Black)
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(36, 12, 81))
+                ) {
+                    Text("Agendar serviços", color = Color.White)
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun ButtonBar(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        OutlinedButton(
+            onClick = { onShowReviewsChange(false) },
+            shape = RoundedCornerShape(16.dp),
+            colors = if (!showReviews)
+                ButtonDefaults.buttonColors(containerColor = Color(36, 12, 81))
+            else
+                ButtonDefaults.buttonColors(containerColor = Color.White)
+        ) {
+            Text("Informações", color = if (!showReviews) Color.White else Color(36, 12, 81))
+        }
+        OutlinedButton(
+            onClick = { onShowReviewsChange(true) },
+            shape = RoundedCornerShape(16.dp),
+            colors = if (showReviews)
+                ButtonDefaults.buttonColors(containerColor = Color(36, 12, 81))
+            else
+                ButtonDefaults.buttonColors(containerColor = Color.White)
+        ) {
+            Text("Avaliações", color = if (showReviews) Color.White else Color(36, 12, 81))
+        }
+    }
+}
+
+@Composable
+fun ReviewsContent() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(250.dp)
+    ) {
+        LazyColumn(
+            contentPadding = PaddingValues(bottom = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(reviewList) { review ->
+                ReviewItem(
+                    name = review.name,
+                    rating = review.rating,
+                    date = review.date,
+                    review = review.text
+                )
             }
         }
     }
 }
 
 @Composable
-fun ButtonBar() {
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+fun ReviewItem(name: String, rating: Int, date: String, review: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .background(Color(0xFF3F51B5), shape = RoundedCornerShape(16.dp))
+            .padding(16.dp)
     ) {
-        OutlinedButton(
-            onClick = {},
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(36, 12, 81))
-        ) {
-            Text("Informações", color = Color.White)
-        }
-        OutlinedButton(
-            onClick = {},
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-            border = BorderStroke(1.dp, Color(36, 12, 81))
-        ) {
-            Text("Avaliações", color = Color(36, 12, 81))
-        }
+        Text(text = name, color = Color.White, fontSize = 20.sp)
+        Text(text = "⭐".repeat(rating), color = Color.Yellow, fontSize = 16.sp)
+        Text(text = date, color = Color.White, fontSize = 12.sp)
+        Text(text = review, color = Color.LightGray, fontSize = 14.sp)
     }
 }
+
+
+
+data class Review(val name: String, val rating: Int, val date: String, val text: String)
+
+
+// Colocar dados do banco aqui!
+val reviewList = listOf(
+    Review("Derick Augusto", 5, "3 dias atrás", "Acompanhei um amigo, achei o lugar muito bom..."),
+    Review("Gustavo Almeida", 5, "5 dias atrás", "Muito organizado e bem decorado..."),
+    Review("Lucas Prado", 4, "1 semana atrás", "Serviço excelente, mas a espera foi um pouco longa."),
+    Review("Fernanda Lopes", 5, "2 semanas atrás", "Ambiente confortável e profissionais incríveis!"),
+    Review("Carla Dias", 4, "3 semanas atrás", "Gostei muito! Voltarei com certeza.")
+)
+
+
