@@ -1,12 +1,13 @@
 package com.example.luna_project.components
 
+import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,20 +23,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -44,7 +48,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -58,6 +61,7 @@ import com.example.luna_project.R
 import com.example.luna_project.ui.theme.activities.MainActivity
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 
 
@@ -70,6 +74,10 @@ fun ServiceScreen() {
     // Lista de serviços selecionados (nome e preço)
     val selectedServices = remember { mutableStateListOf<Pair<String, String>>() }
     val selectedBarbers = remember { mutableStateListOf<Barber>() }
+
+    var selectedBarber by remember { mutableStateOf<Barber?>(null) }
+    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+    var selectedHour by remember { mutableStateOf<String?>(null) }
 
 
     Column(
@@ -98,7 +106,7 @@ fun ServiceScreen() {
                 }
             },
             actions = {
-                IconButton(onClick = { /* Você pode colocar ações aqui futuramente */ }) {
+                IconButton(onClick = { }) {
                     Icon(Icons.Filled.MoreVert, contentDescription = null)
                 }
             }
@@ -123,9 +131,12 @@ fun ServiceScreen() {
             )
 
             2 -> ReserveSection(
-                selectedBarber = null,
-                onReserveSelected = { selectedTab = 3},
+                selectedDate = selectedDate,
+                selectedHour = selectedHour,
+                onDateSelected = { selectedDate = it },
+                onHourSelected = { selectedHour = it }
             )
+
 
         }
 
@@ -235,18 +246,22 @@ fun BarbersSection(
 ) {
     val context = LocalContext.current
     val barbers = listOf(
-        Barber("Derick Augusto", R.drawable.ic_barber),
+        Barber("Derick Augusto", R.drawable.ic_user),
+        Barber("Leonardo Silva", R.drawable.ic_user),
+        Barber("Gustavo Almeida", R.drawable.ic_user),
+        Barber("Gabriel Souza", R.drawable.ic_user),
+        Barber("Paulo Lima", R.drawable.ic_user)
     )
 
     val selectedBarber = remember { mutableStateOf<Barber?>(null) }
 
     Column(modifier = Modifier
         .fillMaxSize()
-        .padding(6.dp)) {
+        .padding(16.dp)) {
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(barbers) { barber ->
                 val isSelected = barber == selectedBarber.value
@@ -288,9 +303,9 @@ fun BarbersSection(
                 fontWeight = FontWeight.Bold
             )
         }
-
     }
 }
+
 
 
 @Composable
@@ -515,193 +530,231 @@ fun ServiceItem(title: String, price: String, selected: Boolean, onClick: () -> 
 
 
 @Composable
-fun ReserveSection(selectedBarber: Barber?,
-                   onReserveSelected: () -> Unit) {
-    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
-    var selectedHour by remember { mutableStateOf<String?>(null) }
+fun ReserveSection(
+    selectedDate: LocalDate?,
+    selectedHour: String?,
+    onDateSelected: (LocalDate) -> Unit,
+    onHourSelected: (String) -> Unit
+) {
+    // ... (MonthNavigation, SectionTitle, DaysOfMonthRow, HoursRow remain unchanged) ...
+
+    val context = LocalContext.current
+    var currentMonthDate by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
+    var showSelectionCard by remember { mutableStateOf(false) }
+
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-
-        if (selectedBarber != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.barber_shop_image),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color(0xFF240C51)),
-                                startY = 50f
-                            )
-                        )
-                        .padding(16.dp)
-                        .align(Alignment.BottomStart)
-                ) {
-                    Text(
-                        text = selectedBarber.name,
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Dom Roque",
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 14.sp
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Rating",
-                            tint = Color(0xFFFFD700),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "4.8 (238)",
-                            color = Color.White,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Data",
-            modifier = Modifier.padding(horizontal = 16.dp),
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
-        )
-
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            val days = (0..5).map { LocalDate.now().plusDays(it.toLong()) }
-            items(days.size) { index ->
-                val date = days[index]
-                Button(
-                    onClick = { selectedDate = date },
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = if (selectedDate == date) Color(0xFF240C51) else Color.White,
-                        contentColor = if (selectedDate == date) Color.White else Color.Black
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.size(width = 60.dp, height = 70.dp)
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(text = date.dayOfMonth.toString(), fontSize = 16.sp)
-                        Text(
-                            text = date.dayOfWeek.name.take(3).lowercase().replaceFirstChar { it.uppercase() },
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
-        }
+        MonthNavigation(currentMonthDate = currentMonthDate, onMonthChange = { currentMonthDate = it })
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Seção de Selecionar Horário
-        Text(
-            text = "Hora",
-            modifier = Modifier.padding(horizontal = 16.dp),
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
+        SectionTitle(title = "Data")
+
+        DaysOfMonthRow(
+            currentMonthDate = currentMonthDate,
+            selectedDate = selectedDate,
+            onDateSelected = onDateSelected
         )
 
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            val hours = listOf("09:00", "09:30", "10:00", "10:30")
-            items(hours.size) { index ->
-                val hour = hours[index]
-                Button(
-                    onClick = { selectedHour = hour },
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = if (selectedHour == hour) Color(0xFF240C51) else Color.White,
-                        contentColor = if (selectedHour == hour) Color.White else Color.Black
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .height(40.dp)
-                ) {
-                    Text(text = hour)
-                }
-            }
-        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        SectionTitle(title = "Hora")
+
+        HoursRow(
+            selectedHour = selectedHour,
+            onHourSelected = onHourSelected
+        )
+
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        if (selectedDate != null && selectedHour != null) {
-            Column(
+        Box(modifier = Modifier.fillMaxWidth()) {
+            // Content above the selection card
+            SelectionConfirmation(selectedDate, selectedHour, context, showSelectionCard)
+
+            // Button that triggers the expansion of the card
+            Button(
+                onClick = {
+                    if (selectedDate != null && selectedHour != null) {
+                        showSelectionCard = true
+                        Toast.makeText(context, "Horário selecionado: $selectedDate às $selectedHour", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "Deve escolher um horário", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(36, 12, 81)),
+                shape = RoundedCornerShape(24.dp),
+                elevation = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF240C51))
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp)
+                    .height(56.dp)
+                    .align(Alignment.BottomCenter)
             ) {
                 Text(
-                    text = selectedDate!!.format(DateTimeFormatter.ofPattern("EEEE, dd 'de' MMMM", Locale("pt", "BR"))),
+                    text = "Selecionar Horário",
                     color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MonthNavigation(
+    currentMonthDate: LocalDate,
+    onMonthChange: (LocalDate) -> Unit
+) {
+    Column {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = currentMonthDate.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("pt", "BR"))),
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(onClick = { onMonthChange(currentMonthDate.minusMonths(1).withDayOfMonth(1)) }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = null)
+            }
+            IconButton(onClick = { onMonthChange(currentMonthDate.plusMonths(1).withDayOfMonth(1)) }) {
+                Icon(Icons.Default.ArrowForward, contentDescription = null)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(title: String) {
+    Text(
+        text = title,
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp
+    )
+}
+
+@Composable
+private fun DaysOfMonthRow(
+    currentMonthDate: LocalDate,
+    selectedDate: LocalDate?,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    val daysInMonth = (1..currentMonthDate.lengthOfMonth()).map {
+        currentMonthDate.withDayOfMonth(it)
+    }
+
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(90.dp)
+    ) {
+        items(daysInMonth.size) { index ->
+            val date = daysInMonth[index]
+            Button(
+                onClick = { onDateSelected(date) },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = if (selectedDate == date) Color(0xFF240C51) else Color.White,
+                    contentColor = if (selectedDate == date) Color.White else Color.Black
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .width(60.dp)
+                    .height(70.dp)
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = date.dayOfMonth.toString(), fontSize = 16.sp)
+                    Text(
+                        text = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.forLanguageTag("pt-BR")),
+                        fontSize = 12.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HoursRow(
+    selectedHour: String?,
+    onHourSelected: (String) -> Unit
+) {
+    val hours = listOf("09:00", "09:30", "10:00", "10:30") // Pode expandir aqui se quiser mais horários
+
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(hours.size) { index ->
+            val hour = hours[index]
+            Button(
+                onClick = { onHourSelected(hour) },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = if (selectedHour == hour) Color(0xFF240C51) else Color.White,
+                    contentColor = if (selectedHour == hour) Color.White else Color.Black
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.height(40.dp)
+            ) {
+                Text(text = hour)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectionConfirmation(
+    selectedDate: LocalDate?,
+    selectedHour: String?,
+    context: android.content.Context,
+    showSelectionCard: Boolean
+) {
+    if (showSelectionCard && selectedDate != null && selectedHour != null) {
+        Card(
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            elevation = 4.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 80.dp) // Adjust padding to avoid overlap. May need tweaking.
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = selectedDate.format(DateTimeFormatter.ofPattern("EEEE, dd 'de' MMMM", Locale("pt", "BR"))),
+                    color = Color.Black,
                     fontSize = 14.sp
                 )
                 Text(
-                    text = "$selectedHour - ${getNextHalfHour(selectedHour!!)}",
-                    color = Color.White,
+                    text = "$selectedHour - ${getNextHalfHour(selectedHour)}",
+                    color = Color.Black,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {},
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color(36, 12, 81)),
-            border = BorderStroke(1.dp, Color(36, 12, 81)),
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .height(56.dp)
-        ) {
-            Text(
-                text = "Selecionar Horário",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
     }
 }
 
-// Função auxiliar para calcular o próximo horário
 fun getNextHalfHour(hour: String): String {
     val (hours, minutes) = hour.split(":").map { it.toInt() }
     val nextMinutes = (minutes + 30) % 60
     val nextHours = (hours + (minutes + 30) / 60) % 24
     return String.format("%02d:%02d", nextHours, nextMinutes)
 }
-
-
-
-
-
-
