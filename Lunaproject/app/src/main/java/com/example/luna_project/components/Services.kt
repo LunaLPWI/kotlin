@@ -1,11 +1,13 @@
 package com.example.luna_project.components
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +33,7 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -40,6 +43,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -72,12 +76,15 @@ fun ServiceScreen() {
     val context = LocalContext.current
 
     // Lista de serviços selecionados (nome e preço)
-    val selectedServices = remember { mutableStateListOf<Pair<String, String>>() }
+    val selectedServices = remember { mutableStateListOf<Pair<String, Double>>() }
     val selectedBarbers = remember { mutableStateListOf<Barber>() }
 
     var selectedBarber by remember { mutableStateOf<Barber?>(null) }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var selectedHour by remember { mutableStateOf<String?>(null) }
+    var totalPrice by remember { mutableStateOf(0.0) }
+
+    val selectedDateTime = remember { mutableStateOf<Pair<LocalDate?, String?>>(Pair(null, null)) }
 
 
     Column(
@@ -122,7 +129,8 @@ fun ServiceScreen() {
         when (selectedTab) {
             0 -> ServicesSection(
                 selectedServices = selectedServices,
-                onServicesConfirmed = { selectedTab = 1 }
+                onServicesConfirmed = { selectedTab = 1
+                    totalPrice = selectedServices.sumOf { it.second }}
             )
 
             1 -> BarbersSection(
@@ -131,12 +139,25 @@ fun ServiceScreen() {
             )
 
             2 -> ReserveSection(
-                selectedDate = selectedDate,
-                selectedHour = selectedHour,
-                onDateSelected = { selectedDate = it },
-                onHourSelected = { selectedHour = it }
+                selectedDateTime = selectedDateTime,
+                onReserveSelected = { selectedTab = 3 }
             )
 
+            3 ->  ConfirmationSection(
+                selectedDate = selectedDateTime.value.first?.toString() ?: "",
+                selectedTime = selectedDateTime.value.second ?: "",
+                selectedServices = selectedServices,
+                totalPrice = totalPrice,
+                selectedBarber = selectedBarbers.firstOrNull(),
+                onConfirm = {
+                    if (selectedServices.isEmpty() || selectedBarbers.isEmpty() || selectedDateTime.value.first == null || selectedDateTime.value.second == null) {
+                        Toast.makeText(context, "Preencha todos os campos para confirmar.", Toast.LENGTH_SHORT).show()
+                    } else {
+
+                        Toast.makeText(context, "Reserva Confirmada!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
 
         }
 
@@ -371,7 +392,7 @@ fun SelectBarberButton() {
 
 @Composable
 fun ServicesSection(
-    selectedServices: MutableList<Pair<String, String>>,
+    selectedServices: MutableList<Pair<String, Double>>,
     onServicesConfirmed: () -> Unit
 ) {
     val context = LocalContext.current
@@ -432,8 +453,10 @@ fun ServicesSection(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(services) { (title, price) ->
+            items(services) { (title, priceString) ->
+                val price = priceString.replace("R$ ", "").replace(",", ".").toDoubleOrNull() ?: 0.0
                 val isSelected = selectedServices.any { it.first == title }
+
                 ServiceItem(
                     title = title,
                     price = price,
@@ -499,7 +522,7 @@ fun ServiceIcon(selected: Boolean, icon: Int, onClick: () -> Unit) {
 }
 
 @Composable
-fun ServiceItem(title: String, price: String, selected: Boolean, onClick: () -> Unit) {
+fun ServiceItem(title: String, price: Double, selected: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -510,8 +533,6 @@ fun ServiceItem(title: String, price: String, selected: Boolean, onClick: () -> 
             .clickable(onClick = onClick)
             .padding(16.dp)
     ) {
-
-
         Column {
             Text(
                 text = title,
@@ -519,8 +540,8 @@ fun ServiceItem(title: String, price: String, selected: Boolean, onClick: () -> 
                 fontSize = 16.sp
             )
             Text(
-                text = price,
-                color = if (selected) Color(0xFF000000) else Color.Gray,
+                text = String.format("R$ %.2f", price),
+                color = if (selected) Color.Black else Color.Gray,
                 fontSize = 14.sp
             )
         }
@@ -531,12 +552,9 @@ fun ServiceItem(title: String, price: String, selected: Boolean, onClick: () -> 
 
 @Composable
 fun ReserveSection(
-    selectedDate: LocalDate?,
-    selectedHour: String?,
-    onDateSelected: (LocalDate) -> Unit,
-    onHourSelected: (String) -> Unit
+    selectedDateTime: MutableState<Pair<LocalDate?, String?>>, // Recebe o state
+    onReserveSelected: () -> Unit
 ) {
-    // ... (MonthNavigation, SectionTitle, DaysOfMonthRow, HoursRow remain unchanged) ...
 
     val context = LocalContext.current
     var currentMonthDate by remember { mutableStateOf(LocalDate.now().withDayOfMonth(1)) }
@@ -556,8 +574,8 @@ fun ReserveSection(
 
         DaysOfMonthRow(
             currentMonthDate = currentMonthDate,
-            selectedDate = selectedDate,
-            onDateSelected = onDateSelected
+            selectedDate = selectedDateTime.value.first, // Usa o state
+            onDateSelected = { selectedDateTime.value = Pair(it, selectedDateTime.value.second) } // Atualiza o state
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -565,23 +583,29 @@ fun ReserveSection(
         SectionTitle(title = "Hora")
 
         HoursRow(
-            selectedHour = selectedHour,
-            onHourSelected = onHourSelected
+            selectedHour = selectedDateTime.value.second, // Usa o state
+            onHourSelected = { selectedDateTime.value = Pair(selectedDateTime.value.first, it) } // Atualiza o state
         )
 
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Box(modifier = Modifier.fillMaxWidth()) {
-            // Content above the selection card
-            SelectionConfirmation(selectedDate, selectedHour, context, showSelectionCard)
+            SelectionConfirmation(
+                selectedDateTime.value.first, // Usa o state
+                selectedDateTime.value.second, // Usa o state
+                context,
+                showSelectionCard
+            )
 
-            // Button that triggers the expansion of the card
             Button(
                 onClick = {
-                    if (selectedDate != null && selectedHour != null) {
+                    if (selectedDateTime.value.first != null && selectedDateTime.value.second != null) {
                         showSelectionCard = true
-                        Toast.makeText(context, "Horário selecionado: $selectedDate às $selectedHour", Toast.LENGTH_SHORT).show()
+                        val date = selectedDateTime.value.first
+                        val hour = selectedDateTime.value.second
+                        Toast.makeText(context, "Horário selecionado: $date às $hour", Toast.LENGTH_SHORT).show()
+                        onReserveSelected()
                     } else {
                         Toast.makeText(context, "Deve escolher um horário", Toast.LENGTH_SHORT).show()
                     }
@@ -692,7 +716,7 @@ private fun HoursRow(
     selectedHour: String?,
     onHourSelected: (String) -> Unit
 ) {
-    val hours = listOf("09:00", "09:30", "10:00", "10:30") // Pode expandir aqui se quiser mais horários
+    val hours = listOf("09:00", "09:30", "10:00", "10:30")
 
     LazyRow(
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
@@ -757,4 +781,119 @@ fun getNextHalfHour(hour: String): String {
     val nextMinutes = (minutes + 30) % 60
     val nextHours = (hours + (minutes + 30) / 60) % 24
     return String.format("%02d:%02d", nextHours, nextMinutes)
+}
+
+
+
+@SuppressLint("DefaultLocale")
+@Composable
+fun ConfirmationSection(
+    selectedDate: String,
+    selectedTime: String,
+    selectedServices: List<Pair<String, Double>>,
+    totalPrice: Double,
+    selectedBarber: Barber?,
+    onConfirm: () -> Unit
+) {
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(8.dp), // Ajuste o valor para arredondar mais ou menos
+                elevation = 2.dp, // Adiciona uma leve sombra (opcional)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(text = "Detalhes", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Dom Roque")
+                        Text(text = selectedDate)
+                    }
+                    Text("Rua pitinga, Vila Ema")
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("")
+                        Text(text = selectedTime)
+                    }
+                }
+            }
+
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(8.dp),
+                elevation = 2.dp
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(text = "Subtotal", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    for (service in selectedServices) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Text(text = service.first)
+                            Text(text = "R$ ${String.format("%.2f", service.second)}")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = "Total", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text(
+                            text = "R$ ${String.format("%.2f", totalPrice)}",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        Button(
+            onClick = onConfirm,
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color(36, 12, 81)),
+            border = BorderStroke(1.dp, Color(36, 12, 81)),
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .height(56.dp)
+        ) {
+            Text(
+                text = "Confirmar Reserva",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
 }
