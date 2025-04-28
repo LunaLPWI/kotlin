@@ -3,13 +3,10 @@ package com.example.luna_project.ui.theme.activities
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.luna_project.components.ServiceScreen
 import com.example.luna_project.ui.theme.LunaprojectTheme
 
-
-class MainActivity : ComponentActivity() {
+class ServiceActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -18,10 +15,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewMainScreen() {
-    ServiceScreen()
 }

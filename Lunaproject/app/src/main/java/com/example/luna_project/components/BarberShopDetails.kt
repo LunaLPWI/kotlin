@@ -63,7 +63,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import com.example.luna_project.R
+import com.example.luna_project.ui.theme.activities.LoginActivity
 import com.example.luna_project.ui.theme.activities.MainActivity
+import com.example.luna_project.ui.theme.activities.ServiceActivity
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
@@ -73,6 +75,9 @@ import org.osmdroid.views.MapView
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LunaBookApp() {
+
+    var context = LocalContext.current
+
     val scope = rememberCoroutineScope()
     val scaffoldState = rememberBottomSheetScaffoldState()
 
@@ -90,7 +95,7 @@ fun LunaBookApp() {
         },
         sheetPeekHeight = 0.dp
     ) {
-        Content()
+        Content(context)
     }
 }
 
@@ -125,7 +130,7 @@ fun AppBar() {
 }
 
 @Composable
-fun Content() {
+fun Content(context: Context) {
     var showReviews by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -134,7 +139,7 @@ fun Content() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(350.dp) // Ajuste conforme necessário para incluir mapa + parte da imagem visível
+                .height(350.dp)
         ) {
             OsmdroidMapView(
                 modifier = Modifier
@@ -142,13 +147,12 @@ fun Content() {
                     .zIndex(0f)
             )
 
-            ExpandableBarberImage() // já tem offset de 100.dp configurado internamente
+            ExpandableBarberImage()
         }
 
-        BarberInfo(showReviews, onShowReviewsChange = { showReviews = it })
+        BarberInfo(showReviews, onShowReviewsChange = { showReviews = it }, context)
     }
 }
-
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -166,8 +170,9 @@ fun SearchBar() {
             Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
         },
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
-                .padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         colors = TextFieldDefaults.textFieldColors(
             containerColor = Color(0xFFF6F6F6),
             cursorColor = MaterialTheme.colorScheme.primary,
@@ -180,6 +185,7 @@ fun SearchBar() {
 @Composable
 fun OsmdroidMapView(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+
     Configuration.getInstance().load(
         context,
         context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE)
@@ -201,9 +207,8 @@ fun OsmdroidMapView(modifier: Modifier = Modifier) {
 }
 
 
-
 @Composable
-fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
+fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit, context: Context) {
 
 
     Column {
@@ -237,7 +242,10 @@ fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                .background(
+                    Color.White,
+                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                )
                 .padding(16.dp)
         ) {
             Column {
@@ -255,7 +263,10 @@ fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
                     Text("Telefone: (11)95689-1314", color = Color.Black)
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
-                        onClick = { },
+                        onClick = {
+                            val intent = Intent(context, ServiceActivity::class.java)
+                            context.startActivity(intent)
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 8.dp),
@@ -270,7 +281,6 @@ fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
 
     }
 }
-
 
 
 @Composable
@@ -359,7 +369,7 @@ fun ExpandableBarberImage() {
         lerp(minHeight, maxHeight, (minOffset - offsetY.value) / (minOffset - maxOffset))
     }
 
-    Column (
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .height(expandedHeight)
@@ -368,7 +378,8 @@ fun ExpandableBarberImage() {
                 detectDragGestures(
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        val newOffset = (offsetY.value + dragAmount.y).coerceIn(maxOffset, minOffset)
+                        val newOffset =
+                            (offsetY.value + dragAmount.y).coerceIn(maxOffset, minOffset)
                         coroutineScope.launch {
                             offsetY.snapTo(newOffset)
                         }
@@ -396,10 +407,6 @@ fun ExpandableBarberImage() {
 }
 
 
-
-
-
-
 data class Review(val name: String, val rating: Int, val date: String, val text: String)
 
 
@@ -407,8 +414,18 @@ data class Review(val name: String, val rating: Int, val date: String, val text:
 val reviewList = listOf(
     Review("Derick Augusto", 5, "3 dias atrás", "Acompanhei um amigo, achei o lugar muito bom..."),
     Review("Gustavo Almeida", 5, "5 dias atrás", "Muito organizado e bem decorado..."),
-    Review("Lucas Prado", 4, "1 semana atrás", "Serviço excelente, mas a espera foi um pouco longa."),
-    Review("Fernanda Lopes", 5, "2 semanas atrás", "Ambiente confortável e profissionais incríveis!"),
+    Review(
+        "Lucas Prado",
+        4,
+        "1 semana atrás",
+        "Serviço excelente, mas a espera foi um pouco longa."
+    ),
+    Review(
+        "Fernanda Lopes",
+        5,
+        "2 semanas atrás",
+        "Ambiente confortável e profissionais incríveis!"
+    ),
     Review("Carla Dias", 4, "3 semanas atrás", "Gostei muito! Voltarei com certeza.")
 )
 
