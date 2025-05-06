@@ -1,79 +1,29 @@
-package com.example.luna_project.data.viewmodel
-
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.example.luna_project.data.DTO.Barber
 import java.time.LocalDate
 
-data class Barber(val name: String, val image: Int)
-data class Service(val title: String, val price: String)
+class ServiceScreenViewModel : ViewModel() {
 
-class ServiceViewModel : ViewModel() {
-    private val _selectedTab: MutableState<Int> = mutableStateOf(0)
-    val selectedTab: State<Int> get() = _selectedTab
+    // Detalhes da reserva
+    var selectedDate = mutableStateOf<LocalDate?>(null)
+    var selectedTime = mutableStateOf<String?>(null)
 
-    private val _selectedServices: MutableState<MutableList<Pair<String, String>>> = mutableStateOf(mutableListOf())
-    val selectedServices: State<MutableList<Pair<String, String>>> get() = _selectedServices
+    // Lista de barbearias e serviços selecionados
+    var selectedBarber = mutableStateOf<Barber?>(null)  // Adicionado para o selectedBarber
+    var selectedServices = mutableStateListOf<Triple<Long, String, Double>>()
 
-    private val _selectedBarbers: MutableState<MutableList<Barber>> = mutableStateOf(mutableListOf())
-    val selectedBarbers: State<MutableList<Barber>> get() = _selectedBarbers
+    // Preço total
+    var totalPrice = mutableStateOf(0.0)
 
-    private val _selectedBarber: MutableState<Barber?> = mutableStateOf(null)
-    val selectedBarber: State<Barber?> get() = _selectedBarber
-
-    private val _selectedDate: MutableState<LocalDate?> = mutableStateOf(null)
-    val selectedDate: State<LocalDate?> get() = _selectedDate
-
-    private val _selectedHour: MutableState<String?> = mutableStateOf(null)
-    val selectedHour: State<String?> get() = _selectedHour
-
-    private val _selectedCategory: MutableState<String> = mutableStateOf("hair")
-    val selectedCategory: State<String> get() = _selectedCategory
-
-    fun setSelectedTab(tabIndex: Int) {
-        _selectedTab.value = tabIndex
-    }
-
-    fun addService(service: Pair<String, String>) {
-        _selectedServices.value.add(service)
-    }
-
-    fun removeService(serviceTitle: String) {
-        _selectedServices.value.removeIf { it.first == serviceTitle }
-    }
-
-    fun selectBarber(barber: Barber) {
-        _selectedBarber.value = barber
-    }
-
-    fun deselectBarber() {
-        _selectedBarber.value = null
-    }
-
-    fun addBarber(barber: Barber) {
-        _selectedBarbers.value.add(barber)
-    }
-
-    fun setSelectedDate(date: LocalDate) {
-        _selectedDate.value = date
-    }
-
-    fun setSelectedHour(hour: String) {
-        _selectedHour.value = hour
-    }
-
-    fun setSelectedCategory(category: String) {
-        _selectedCategory.value = category
-    }
-
-    fun clearSelections() {
-        _selectedTab.value = 0
-        _selectedServices.value.clear()
-        _selectedBarbers.value.clear()
-        _selectedBarber.value = null
-        _selectedDate.value = null
-        _selectedHour.value = null
-        _selectedCategory.value = "hair"
+    // Função para atualizar os dados da reserva
+    fun updateReservationDetails(date: LocalDate?, time: String?, services: List<Triple<Long ,String, Double>>, barber: Barber?) {
+        selectedDate.value = date
+        selectedTime.value = time
+        selectedServices.clear()
+        selectedServices.addAll(services)
+        selectedBarber.value = barber  // Atualizando o selectedBarber
+        totalPrice.value = services.sumOf { it.third }
     }
 }

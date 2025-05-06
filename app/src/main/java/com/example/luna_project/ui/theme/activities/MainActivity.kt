@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
             // Inicializa o launcher de permissões
             requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
                 if (isGranted) {
+
                     // Permissão concedida, acesse a localização
                     acessarLocalizacao()
                 } else {
@@ -51,7 +52,7 @@ class MainActivity : ComponentActivity() {
                 // Solicite a permissão de localização
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             } else {
-                // Se a permissão foi concedida, acesse a localização
+
                 acessarLocalizacao()
             }
         }

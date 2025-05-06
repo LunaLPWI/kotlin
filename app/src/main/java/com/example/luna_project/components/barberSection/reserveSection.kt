@@ -1,11 +1,10 @@
 package com.example.luna_project.components.barberSection
 
-import Barber
-
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,17 +17,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyRow
-
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,80 +42,100 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import com.example.luna_project.R
+import com.example.luna_project.data.DTO.Barber
+import com.example.luna_project.data.api.RetrofitClient
+import com.example.luna_project.data.session.SelectBarberSession
+import com.example.luna_project.data.session.UserSession
 import getNextHalfHour
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-
+import kotlin.math.log
 
 @Composable
-fun ReserveSection(selectedBarber: Barber?,
-                   onReserveSelected: () -> Unit) {
+fun ReserveSection(
+    selectedBarber: Barber?,
+    onReserveSelected: () -> Unit,
+    onDateTimeSelected: (LocalDate?, String?) -> Unit
+) {
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var selectedHour by remember { mutableStateOf<String?>(null) }
+    val hours: MutableList<String> = remember { mutableStateListOf() }
+
+    // Configuração do formato de hora
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+
+    // Só atualiza selectedDateTime no ServiceScreen quando ambos estiverem selecionados
+    if (selectedDate != null && selectedHour != null) {
+        onDateTimeSelected(selectedDate, selectedHour)
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-
         if (selectedBarber != null) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(120.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.barber_shop_image),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color(0xFF240C51)),
-                                startY = 50f
-                            )
-                        )
                         .padding(16.dp)
                         .align(Alignment.BottomStart)
                 ) {
-                    Text(
-                        text = selectedBarber.name,
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Dom Roque",
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 14.sp
-                    )
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Rating",
-                            tint = Color(0xFFFFD700),
-                            modifier = Modifier.size(16.dp)
+                        // Imagem do barbeiro com placeholder e imagem de erro
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = "URL da imagem ou resource",
+                                placeholder = painterResource(id = R.drawable.ic_user), // Coloque aqui o recurso de placeholder
+                                error = painterResource(id = R.drawable.ic_beard) // Coloque aqui o recurso de erro
+                            ),
+                            contentDescription = "Imagem do barbeiro",
+                            modifier = Modifier
+                                .size(90.dp)
+                                .clip(CircleShape)
+                                .border(1.dp, Color.Gray, CircleShape)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "4.8 (238)",
-                            color = Color.White,
-                            fontSize = 12.sp
-                        )
+
+                        Spacer(modifier = Modifier.width(8.dp)) // Espaço entre a imagem e o nome
+
+                        // Nome do barbeiro
+                        Column {
+                            Text(
+                                text = selectedBarber.name,
+                                color = Color.Black,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp)) // Espaço entre o nome e o nome da sessão
+
+                            // Nome da sessão ou serviço
+                            Text(
+                                text = SelectBarberSession.name,
+                                color = Color.Black.copy(alpha = 0.7f),
+                                fontSize = 14.sp
+                            )
+                        }
                     }
+
                 }
             }
+
+
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
         Text(
             text = "Data",
             modifier = Modifier.padding(horizontal = 16.dp),
@@ -129,8 +150,57 @@ fun ReserveSection(selectedBarber: Barber?,
             val days = (0..5).map { LocalDate.now().plusDays(it.toLong()) }
             items(days.size) { index ->
                 val date = days[index]
+
                 Button(
-                    onClick = { selectedDate = date },
+                    onClick = {
+                        selectedDate = date
+
+                        // Inicia a requisição ao selecionar uma data
+                        selectedBarber?.let { barber ->
+                            val openHourFormatted = SelectBarberSession.openHour.format(timeFormatter)
+                            val closeHourFormatted = SelectBarberSession.closeHour.format(timeFormatter)
+                            val startDateTime = "${date}T${openHourFormatted}"
+                            val endDateTime = "${date}T${closeHourFormatted}"
+
+                            Log.d("BarbersSection", "Detalhes da Requisição: OpenHour - CloseHour = $startDateTime - $endDateTime, Barber ID = ${barber.id}, User ID = ${UserSession.id}, Token = ${UserSession.token}")
+
+                            RetrofitClient.apiService.getVacantSchedules(
+                                "${startDateTime}",   // Ex: "2025-04-28T08:00"
+                                "${endDateTime}",  // Ex: "2025-04-28T18:00"
+                                barber.id,
+                                UserSession.id,
+                                "Bearer ${UserSession.token}"
+                            ).enqueue(object : retrofit2.Callback<Set<String>> {
+                                override fun onResponse(
+                                    call: retrofit2.Call<Set<String>>,
+                                    response: retrofit2.Response<Set<String>>
+                                ) {
+                                    Log.d("BarbersSection", "${response.body()}")
+                                    if (response.isSuccessful) {
+                                        val vacantSchedules = response.body() ?: emptySet()
+                                        hours.clear()
+                                        vacantSchedules.forEach { schedule ->
+                                            val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME // ou use um personalizado se necessário
+
+                                            val localDateTime = LocalDateTime.parse(schedule, formatter)
+                                            val localTimeFormatted = localDateTime.toLocalTime().format(timeFormatter)
+                                            hours.add(localTimeFormatted)
+                                        }
+                                        Log.d("BarbersSection", "Dados carregados com sucesso: ${vacantSchedules.size} horários disponíveis")
+                                    } else {
+                                        Log.e("BarbersSection", "Falha ao carregar horários: ${response.code()}")
+                                    }
+                                }
+
+                                override fun onFailure(call: retrofit2.Call<Set<String>>, t: Throwable) {
+                                    Log.e("BarbersSection", "Erro de rede: ${t.message}")
+                                }
+                            })
+                            Log.e("BarbersSection", "${endDateTime}")
+                            Log.e("BarbersSection", "${startDateTime}")
+                        } ?: Log.e("BarbersSection", "Nenhum barbeiro selecionado")
+
+                    },
                     colors = ButtonDefaults.buttonColors(
                         backgroundColor = if (selectedDate == date) Color(0xFF240C51) else Color.White,
                         contentColor = if (selectedDate == date) Color.White else Color.Black
@@ -163,7 +233,6 @@ fun ReserveSection(selectedBarber: Barber?,
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val hours = listOf("09:00", "09:30", "10:00", "10:30")
             items(hours.size) { index ->
                 val hour = hours[index]
                 Button(
@@ -173,8 +242,7 @@ fun ReserveSection(selectedBarber: Barber?,
                         contentColor = if (selectedHour == hour) Color.White else Color.Black
                     ),
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .height(40.dp)
+                    modifier = Modifier.height(40.dp)
                 ) {
                     Text(text = hour)
                 }
@@ -207,7 +275,9 @@ fun ReserveSection(selectedBarber: Barber?,
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = {},
+            onClick = {
+                // Ação ao clicar para confirmar o horário selecionado
+            },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color(36, 12, 81)),
             border = BorderStroke(1.dp, Color(36, 12, 81)),
             shape = RoundedCornerShape(24.dp),

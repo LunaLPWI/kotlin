@@ -1,12 +1,13 @@
 package com.example.luna_project.components.barberSection
 
-import Barber
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -25,18 +26,27 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import com.example.luna_project.R
+import com.example.luna_project.data.DTO.Barber
+import com.example.luna_project.data.api.RetrofitClient
+import com.example.luna_project.data.session.SelectBarberSession
+import com.example.luna_project.data.session.UserSession
 
 @Composable
 fun BarbersSection(
@@ -44,17 +54,49 @@ fun BarbersSection(
     onBarberSelected: () -> Unit
 ) {
     val context = LocalContext.current
-    val barbers = listOf(
-        Barber("Derick Augusto", R.drawable.ic_barber),
-    )
+    val barbers = remember { mutableStateListOf<Barber>() }
+
+    // Adicionando um log para indicar que a Composable foi iniciada
+    Log.d("BarbersSection", "Composable iniciada")
+
+    // Carregar dados da API
+    LaunchedEffect(Unit) {
+        Log.d("BarbersSection", "Iniciando carregamento de dados da API")
+        RetrofitClient.apiService.getEmployeesById(SelectBarberSession.id, UserSession.token)
+            .enqueue(object : retrofit2.Callback<List<Barber>> {
+                override fun onResponse(
+                    call: retrofit2.Call<List<Barber>>,
+                    response: retrofit2.Response<List<Barber>>
+                ) {
+                    if (response.isSuccessful) {
+                        val employees = response.body() ?: emptyList()
+                        barbers.clear()
+                        barbers.addAll(employees)
+                        Log.d("BarbersSection", "Dados carregados com sucesso: ${employees.size} barbeiros")
+                    } else {
+                        Log.e("BarbersSection", "Falha ao carregar barbeiros: ${response.code()}")
+                        Toast.makeText(context, "Falha ao carregar barbeiros", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: retrofit2.Call<List<Barber>>, t: Throwable) {
+                    Log.e("BarbersSection", "Erro de rede: ${t.message}")
+                    Toast.makeText(context, "Erro de rede: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
 
     val selectedBarber = remember { mutableStateOf<Barber?>(null) }
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(6.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(6.dp)
+    ) {
         LazyColumn(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -62,10 +104,11 @@ fun BarbersSection(
                 val isSelected = barber == selectedBarber.value
                 BarberItem(
                     name = barber.name,
-                    image = barber.image,
+                    image = R.drawable.ic_barber,
                     selected = isSelected,
                     onClick = {
                         selectedBarber.value = if (isSelected) null else barber
+                        Log.d("BarbersSection", "Barbeiro selecionado: ${barber.name}")
                     }
                 )
             }
@@ -73,15 +116,13 @@ fun BarbersSection(
 
         Button(
             onClick = {
-                if (selectedBarber.value != null) {
+                selectedBarber.value?.let {
                     selectedBarbers.clear()
-                    selectedBarbers.add(selectedBarber.value!!)
-
+                    selectedBarbers.add(it)
+                    Log.d("BarbersSection", "Barbeiro confirmado: ${it.name}")
                     Toast.makeText(context, "Barbeiro escolhido", Toast.LENGTH_SHORT).show()
                     onBarberSelected()
-                } else {
-                    Toast.makeText(context, "Deve escolher um barbeiro", Toast.LENGTH_SHORT).show()
-                }
+                } ?: Toast.makeText(context, "Deve escolher um barbeiro", Toast.LENGTH_SHORT).show()
             },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color(36, 12, 81)),
             border = BorderStroke(1.dp, Color(36, 12, 81)),
@@ -98,40 +139,49 @@ fun BarbersSection(
                 fontWeight = FontWeight.Bold
             )
         }
-
     }
-
 }
-
-    @Composable
-    fun BarberItem(name: String, image: Int, selected: Boolean, onClick: () -> Unit) {
-        Row(
+@Composable
+fun BarberItem(
+    name: String,
+    image: Int,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = if (selected) Color(0xFFEEE4FF) else Color(0xFFF8F8F8),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = if (selected) Color(0xFFB3A2D5) else Color(0xFFF8F8F8),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .clickable(onClick = onClick)
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .size(60.dp)
+                .background(Color.White, shape = CircleShape),
+            contentAlignment = Alignment.Center
         ) {
             Image(
-                painter = painterResource(id = image),
+                painter = rememberAsyncImagePainter("drawable/ic_barber"),
                 contentDescription = null,
                 modifier = Modifier
                     .size(60.dp)
-                    .background(Color.White, shape = CircleShape)
-                    .padding(8.dp)
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Text(
-                text = name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (selected) Color.Black else Color.Gray
+                    .clip(CircleShape)
+                    .background(Color.White)
             )
         }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Text(
+            text = name,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (selected) Color.Black else Color.Gray
+        )
     }
+}

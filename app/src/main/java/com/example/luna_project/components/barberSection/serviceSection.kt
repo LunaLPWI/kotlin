@@ -1,5 +1,6 @@
 package com.example.luna_project.components.barberSection
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -14,6 +15,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,23 +25,50 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.luna_project.R
+import com.example.luna_project.data.DTO.Barber
+import com.example.luna_project.data.api.RetrofitClient
+import com.example.luna_project.data.session.SelectBarberSession
+import com.example.luna_project.data.session.UserSession
 
 @Composable
 fun ServicesSection(
-    onServiceConfirmed: (Pair<String, String>) -> Unit
+    selectedBarbers: SnapshotStateList<Barber>,
+    onServiceConfirmed: (List<Triple<Long,String, Double>>) -> Unit
 ) {
     val context = LocalContext.current
 
-    val allServices = listOf(
-        "Corte cabelo" to "R$ 40,00",
-        "Corte Masculino" to "R$ 40,00",
-        "Corte de barba" to "R$ 30,00",
-        "Bigode" to "R$ 20,00",
-        "Aparar navalha" to "R$ 35,00",
-        "Desenho com navalha" to "R$ 50,00"
-    )
+    val allServices =  remember { mutableStateListOf<Triple<Long,String, Double>>() }
 
-    var currentSelectedService by remember { mutableStateOf<Pair<String, String>?>(null) }
+
+
+    LaunchedEffect(Unit) {
+        Log.d("BarbersSection", "Iniciando carregamento de dados da API")
+        RetrofitClient.apiService.getTasks(selectedBarbers[0].id, UserSession.token)
+            .enqueue(object : retrofit2.Callback<List<Task>> {
+                override fun onResponse(
+                    call: retrofit2.Call<List<Task>>,
+                    response: retrofit2.Response<List<Task>>
+                ) {
+                    if (response.isSuccessful) {
+                        val tasks = response.body() ?: emptyList()
+                        tasks.forEach { task ->
+                            allServices.add(Triple(task.id,task.name, task.value))
+                        }
+                        Log.d("BarbersSection", "Dados carregados com sucesso: ${tasks.size} barbeiros")
+                    } else {
+                        Log.e("BarbersSection", "Falha ao carregar barbeiros: ${response.code()}")
+                        Toast.makeText(context, "Falha ao carregar barbeiros", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: retrofit2.Call<List<Task>>, t: Throwable) {
+                    Log.e("BarbersSection", "Erro de rede: ${t.message}")
+                    Toast.makeText(context, "Erro de rede: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
+    val selectedServices = remember { mutableStateListOf<Triple<Long,String, Double>>() }
 
     Column(
         modifier = Modifier
@@ -61,15 +90,21 @@ fun ServicesSection(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(allServices) { (title, price) ->
-                val isSelected = currentSelectedService?.first == title
+            items(allServices) { (id,title, price) ->
+                val isSelected = selectedServices.any { it.second == title }
+
                 ServiceItem(
                     title = title,
-                    price = price,
+                    price = "R$ ${"%.2f".format(price)}",
                     selected = isSelected,
                     onClick = {
-                        currentSelectedService = title to price
-                        Toast.makeText(context, "Serviço selecionado: $title", Toast.LENGTH_SHORT).show()
+                        if (isSelected) {
+                            selectedServices.removeAll { it.second == title }
+                            Toast.makeText(context, "Serviço removido: $title", Toast.LENGTH_SHORT).show()
+                        } else {
+                            selectedServices.add(Triple(id, title, price))
+                            Toast.makeText(context, "Serviço adicionado: $title", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 )
             }
@@ -77,11 +112,11 @@ fun ServicesSection(
 
         Button(
             onClick = {
-                if (currentSelectedService != null) {
-                    Toast.makeText(context, "Serviço confirmado: ${currentSelectedService!!.first}", Toast.LENGTH_SHORT).show()
-                    onServiceConfirmed(currentSelectedService!!)
+                if (selectedServices.isNotEmpty()) {
+                    onServiceConfirmed(selectedServices.toList())
+                    Toast.makeText(context, "Serviços confirmados", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "Deve escolher um serviço", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Selecione pelo menos um serviço", Toast.LENGTH_SHORT).show()
                 }
             },
             colors = ButtonDefaults.buttonColors(backgroundColor = Color(36, 12, 81)),
@@ -93,7 +128,7 @@ fun ServicesSection(
                 .height(56.dp)
         ) {
             Text(
-                text = "Selecionar Serviço",
+                text = "Selecionar Serviços",
                 color = Color.White,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
@@ -146,3 +181,12 @@ fun ServiceIcon(icon: Int) {
         )
     }
 }
+
+
+data class Task(
+    val id: Long,
+    val name: String,
+    val description: String,
+    val value: Double,
+    val duration: Int?
+)

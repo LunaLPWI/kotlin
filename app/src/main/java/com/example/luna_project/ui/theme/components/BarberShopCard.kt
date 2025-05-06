@@ -18,8 +18,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.luna_project.R
 import com.example.luna_project.data.models.Barbershop
 import com.example.luna_project.data.session.SelectBarberSession
-import com.example.luna_project.data.session.UserSession
-import com.example.luna_project.ui.theme.activities.LoginActivity
 import com.example.luna_project.ui.theme.activities.ServiceActivity
 import com.example.luna_project.viewmodel.HomeViewModel
 

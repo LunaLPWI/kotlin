@@ -51,86 +51,114 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.luna_project.R
 import com.example.luna_project.components.barberSection.BarbersSection
+import com.example.luna_project.components.barberSection.ConfirmationSection
 import com.example.luna_project.components.barberSection.ReserveSection
 import com.example.luna_project.components.barberSection.ServicesSection
+import com.example.luna_project.data.DTO.Barber
 import com.example.luna_project.ui.theme.activities.MainActivity
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ServiceScreen() {
-    var selectedTab by remember { mutableStateOf(0) }
-    val context = LocalContext.current
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun ServiceScreen() {
+        var selectedTab by remember { mutableStateOf(0) }
+        val context = LocalContext.current
+        val selectedDateTime = remember { mutableStateOf<Pair<LocalDate?, String?>>(Pair(null, null)) }
+        val selectedBarbers = remember { mutableStateListOf<Barber>() }
+        val selectedServices = remember { mutableStateListOf<Triple<Long,String, Double>>() }
+        var totalPrice by remember { mutableStateOf(0.0) }
 
-    val selectedBarbers = remember { mutableStateListOf<Barber>() }
-    var selectedService by remember { mutableStateOf<Pair<String, String>?>(null) } // Continua aqui pra guardar a escolha
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
+            TopAppBar(
+                title = {
+                    Box(
+                        Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        androidx.compose.material3.Text(
+                            "Luna Book",
+                            fontSize = 16.sp
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        val intent = Intent(context, MainActivity::class.java)
+                        context.startActivity(intent)
+                    }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = null)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { /* ações futuras */ }) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = null)
+                    }
+                }
+            )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        TopAppBar(
-            title = {
-                Box(
-                    Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    androidx.compose.material3.Text(
-                        "Luna Book",
-                        fontSize = 16.sp
+            HeaderSection()
+            InfoSection()
+            TabsSection(
+                selectedTab = selectedTab,
+                onTabSelected = { index -> selectedTab = index }
+            )
+
+            when (selectedTab) {
+
+                0 -> BarbersSection(
+                    selectedBarbers = selectedBarbers,
+                    onBarberSelected = { selectedTab = 1 }
+                )
+                1 -> ServicesSection(
+                    selectedBarbers = selectedBarbers,
+                    onServiceConfirmed = { services ->
+                        selectedServices.clear()
+                        selectedServices.addAll(services)
+                        totalPrice = selectedServices.sumOf { it.third }
+                        selectedTab = 2
+                    }
+                )
+                2 -> ReserveSection(
+                    selectedBarber = selectedBarbers[0],
+                    onReserveSelected = { selectedTab = 3 },
+                    onDateTimeSelected = { date, hour ->
+                        selectedDateTime.value = Pair(date, hour)
+                        selectedTab = 3
+                    }
+                )
+                3 -> {
+                    ConfirmationSection(
+                        selectedDate = selectedDateTime.value.first?.toString() ?: "",
+                        selectedTime = selectedDateTime.value.second ?: "",
+                        selectedServices = selectedServices,
+                        totalPrice = totalPrice,
+                        selectedBarber = selectedBarbers.firstOrNull(),
+                        onConfirm = {
+                            if (selectedServices.isEmpty() || selectedBarbers.isEmpty() || selectedDateTime.value.first == null || selectedDateTime.value.second == null) {
+                                Toast.makeText(context, "Preencha todos os campos para confirmar.", Toast.LENGTH_SHORT).show()
+                            } else {
+
+                                Toast.makeText(context, "Reserva Confirmada!", Toast.LENGTH_SHORT).show()
+                            }
+                        }
                     )
                 }
-            },
-            navigationIcon = {
-                IconButton(onClick = {
-                    val intent = Intent(context, MainActivity::class.java)
-                    context.startActivity(intent)
-                }) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = null)
-                }
-            },
-            actions = {
-                IconButton(onClick = { /* ações futuras */ }) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = null)
-                }
             }
-        )
 
-        HeaderSection()
-        InfoSection()
-        TabsSection(
-            selectedTab = selectedTab,
-            onTabSelected = { index -> selectedTab = index }
-        )
+            Spacer(modifier = Modifier.height(16.dp))
 
-        when (selectedTab) {
-            0 -> ServicesSection(
-                onServiceConfirmed = { service ->
-                    selectedService = service // Aqui você salva o serviço escolhido
-                    selectedTab = 1 // E muda pra próxima aba
-                }
-            )
-            1 -> BarbersSection(
-                selectedBarbers = selectedBarbers,
-                onBarberSelected = { selectedTab = 2 }
-            )
-            2 -> ReserveSection(
-                selectedBarber = null,
-                onReserveSelected = { selectedTab = 3 }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (selectedTab == 1) {
-            SelectBarberButton()
+            if (selectedTab == 1) {
+                SelectBarberButton()
+            }
         }
     }
-}
 
 
 @Composable
@@ -180,7 +208,7 @@ fun InfoSection() {
 
 @Composable
 fun TabsSection(selectedTab: Int, onTabSelected: (Int) -> Unit) {
-    val tabs = listOf("Serviços", "Barbeiros", "Reservar", "confirmar")
+    val tabs = listOf( "Barbeiros","Serviços", "Reservar", "confirmar")
 
     Row(
         modifier = Modifier
@@ -214,8 +242,6 @@ fun TabsSection(selectedTab: Int, onTabSelected: (Int) -> Unit) {
         }
     }
 }
-
-data class Barber(val name: String, val image: Int)
 
 
 
