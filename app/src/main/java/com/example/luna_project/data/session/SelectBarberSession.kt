@@ -13,6 +13,8 @@ object SelectBarberSession {
     var cnpj: String = ""
     var openHour: String = ""
     var closeHour: String = ""
+    var lat: Double = 0.0
+    var logn: Double = 0.0
 
     // Função para limpar a sessão
     fun clearSession() {
@@ -24,6 +26,8 @@ object SelectBarberSession {
         cnpj = ""
         openHour = ""
         closeHour = ""
+        lat = 0.0
+        logn = 0.0
     }
 
     // Função para salvar a barbearia selecionada na sessão
@@ -38,5 +42,10 @@ object SelectBarberSession {
         cnpj = barbershop.cnpj
         openHour = barbershop.openHour
         closeHour = barbershop.closeHour
+        lat = barbershop.lat
+        logn = barbershop.logn
+
     }
+
+
 }

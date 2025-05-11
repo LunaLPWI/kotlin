@@ -11,4 +11,6 @@ data class EstablishmentResponse (
     val  cnpj: String,
     val  openHour: String,
     val  closeHour: String,
+    val  lat:Double,
+    val  lng:Double
 )

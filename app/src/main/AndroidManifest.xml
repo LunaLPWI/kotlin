@@ -44,6 +44,10 @@
             android:name=".ui.theme.activities.ServiceActivity"
             android:exported="true" />
         <activity android:name=".ui.theme.activities.MainScreenActivityHome" />
+        <activity android:name=".ui.theme.activities.BarberLocationActivity"
+            android:exported="true" />
+        <activity android:name=".ui.theme.activities.FavoriteActivity"
+            android:exported="true" />
         <activity
             android:name=".ui.theme.activities.MainActivity"
             android:exported="true"

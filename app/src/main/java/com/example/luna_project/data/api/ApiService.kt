@@ -34,7 +34,7 @@ interface ApiService {
     suspend fun getBarbershops(
         @Header("Authorization") token: String, // <-- Adicionado aqui para passar o token
         @Query("lat") lat: Double,
-        @Query("logn") logn: Double
+        @Query("lgn") lgn: Double
     ): Response<List<EstablishmentResponse>>
     @PATCH("clients/reset-password")
     fun resetPassword(@Body resetPasswordDTO: ResetPasswordDTO): Call<String>
@@ -55,6 +55,11 @@ interface ApiService {
         @Body schedulingRequestDTO: SchedulingRequestDTO,
         @Header("Authorization") token: String
     ): Call<SchedulingResponseDTO>
+    @GET("establishments/search")
+    suspend fun searchEstablishments(
+        @Header("Authorization") token: String, // <-- Adicionado aqui para passar o token
+        @Query("name") name: String
+    ): Response<List<EstablishmentResponse>>
 
 
 

@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.luna_project.data.session.UserSession
+import com.example.luna_project.ui.theme.activities.FavoriteActivity
 import com.example.luna_project.ui.theme.activities.LoginActivity
 import com.example.luna_project.ui.theme.activities.ProfileActivity
 
@@ -79,7 +80,8 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit) {
         }
 
         MenuButton(icon = Icons.Default.Favorite, label = "Favoritos") {
-            // Exemplo de navegação futura
+            val intent = Intent(context, FavoriteActivity::class.java)
+            context.startActivity(intent)
         }
 
         Spacer(modifier = Modifier.weight(1f))

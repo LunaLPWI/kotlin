@@ -11,6 +11,8 @@ data class Barbershop(
     val  planDTO: PlanDTO?,
     val  cnpj: String,
     val  openHour: String,
-    val  closeHour: String
+    val  closeHour: String,
+    val  lat:Double,
+    val  logn:Double
 
 )

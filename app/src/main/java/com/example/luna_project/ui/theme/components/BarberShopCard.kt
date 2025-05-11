@@ -18,6 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.luna_project.R
 import com.example.luna_project.data.models.Barbershop
 import com.example.luna_project.data.session.SelectBarberSession
+import com.example.luna_project.ui.theme.activities.BarberLocationActivity
 import com.example.luna_project.ui.theme.activities.ServiceActivity
 import com.example.luna_project.viewmodel.HomeViewModel
 
@@ -35,7 +36,7 @@ fun BarberShopCard(barbershop: Barbershop) {
             .padding(horizontal = 8.dp)
             .clickable {
                 SelectBarberSession.saveSelectedBarbershop(barbershop)
-                val intent = Intent(context, ServiceActivity::class.java)
+                val intent = Intent(context, BarberLocationActivity::class.java)
                 context.startActivity(intent)
             },
         shape = RoundedCornerShape(12.dp)

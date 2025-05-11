@@ -16,6 +16,7 @@ import com.example.luna_project.data.repository.LocationHelper
 import com.example.luna_project.ui.theme.LunaprojectTheme
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.luna_project.data.session.UserSession
@@ -26,8 +27,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val loginViewModel = LoginViewModel()
+        val user = loginViewModel.getUserSession(this)
+        val userId = user?.id ?: -1
 
-        if (UserSession.email == "") {
+        if (userId.toInt() == -1) {
             Log.d("myApp", "Usuário não encontrado na sessão, redirecionando para o cadastro")
             val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)

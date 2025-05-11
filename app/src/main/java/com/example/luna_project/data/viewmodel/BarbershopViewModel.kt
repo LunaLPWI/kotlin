@@ -40,7 +40,9 @@ class BarbershopViewModel : ViewModel() {
                                 planDTO = establishment.planDTO,
                                 cnpj = establishment.cnpj,
                                 openHour = establishment.openHour,
-                                closeHour = establishment.closeHour
+                                closeHour = establishment.closeHour,
+                                lat = establishment.lat,
+                                logn = establishment.lng
                             )
                         }
                     }
@@ -54,8 +56,38 @@ class BarbershopViewModel : ViewModel() {
         }
     }
 
-    fun fetchSearchBaberShops(){
+    private val _barbershopsSearch = MutableStateFlow<List<Barbershop>>(emptyList())
+    val barbershopsSearch: StateFlow<List<Barbershop>> = _barbershopsSearch
 
+    fun fetchSearchBaberShops(query: String) {
+        viewModelScope.launch {
+            try {
+                val userToken = UserSession.token
+                val response = RetrofitClient.apiService.searchEstablishments(userToken, query)
+
+                if (response.isSuccessful) {
+                    response.body()?.let { establishments ->
+                        _barbershopsSearch.value = establishments.map { establishment ->
+                            Barbershop(
+                                id = establishment.id,
+                                name = establishment.name,
+                                addressDTO = establishment.addressDTO,
+                                planDTO = establishment.planDTO,
+                                cnpj = establishment.cnpj,
+                                openHour = establishment.openHour,
+                                closeHour = establishment.closeHour,
+                                lat = establishment.lat,
+                                logn = establishment.lng
+                            )
+                        }
+                    }
+                } else {
+                    Log.e("BarbershopFetch", "Erro na resposta: ${response.code()} - ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("BarbershopFetch", "Erro: ${e.localizedMessage}")
+            }
+        }
     }
 
 

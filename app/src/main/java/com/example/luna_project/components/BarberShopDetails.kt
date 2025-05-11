@@ -1,5 +1,4 @@
-package com.example.luna_project.components
-
+package com.example.luna_project.ui.theme.components
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -39,6 +38,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,17 +63,22 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import com.example.luna_project.R
+import com.example.luna_project.data.session.SelectBarberSession
+import com.example.luna_project.data.viewmodel.LoginViewModel
 import com.example.luna_project.ui.theme.activities.MainActivity
+import com.example.luna_project.ui.theme.activities.ServiceActivity
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LunaBookApp() {
-    val scope = rememberCoroutineScope()
+
+    var context = LocalContext.current
     val scaffoldState = rememberBottomSheetScaffoldState()
 
     BottomSheetScaffold(
@@ -90,7 +95,7 @@ fun LunaBookApp() {
         },
         sheetPeekHeight = 0.dp
     ) {
-        Content()
+        Content(context)
     }
 }
 
@@ -125,16 +130,15 @@ fun AppBar() {
 }
 
 @Composable
-fun Content() {
+fun Content(context: Context) {
     var showReviews by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        SearchBar()
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(350.dp) // Ajuste conforme necessário para incluir mapa + parte da imagem visível
+                .height(350.dp)
         ) {
             OsmdroidMapView(
                 modifier = Modifier
@@ -142,68 +146,58 @@ fun Content() {
                     .zIndex(0f)
             )
 
-            ExpandableBarberImage() // já tem offset de 100.dp configurado internamente
+            ExpandableBarberImage()
         }
 
-        BarberInfo(showReviews, onShowReviewsChange = { showReviews = it })
+        BarberInfo(showReviews, onShowReviewsChange = { showReviews = it }, context)
     }
 }
 
 
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SearchBar() {
-    var text by remember { mutableStateOf(TextFieldValue("")) }
-
-    TextField(
-        value = text,
-        onValueChange = { newValue ->
-            text = newValue
-        },
-        placeholder = { Text(text = "Pesquisar") },
-        leadingIcon = {
-            Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
-        },
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
-                .padding(8.dp),
-        colors = TextFieldDefaults.textFieldColors(
-            containerColor = Color(0xFFF6F6F6),
-            cursorColor = MaterialTheme.colorScheme.primary,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        )
-    )
-}
-
 @Composable
 fun OsmdroidMapView(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    Configuration.getInstance().load(
-        context,
-        context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE)
-    )
+
+    LaunchedEffect(Unit) {
+        Configuration.getInstance().load(
+            context,
+            context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE)
+        )
+    }
 
     AndroidView(
         factory = { ctx ->
             MapView(ctx).apply {
                 setMultiTouchControls(true)
-                controller.setZoom(15.0)
-                controller.setCenter(GeoPoint(-23.5505, -46.6333))
-                clipToOutline = true
+
+                // Coordenadas
+                val point = GeoPoint(SelectBarberSession.lat, SelectBarberSession.logn)
+
+                // Centraliza o mapa
+                controller.setZoom(19.0)
+                controller.setCenter(point)
+
+                // Adiciona marcador
+                val marker = Marker(this).apply {
+                    position = point
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    title = SelectBarberSession.name
+                }
+                overlays.add(marker)
             }
         },
         modifier = modifier
             .fillMaxWidth()
+            .height(300.dp)
             .clipToBounds()
     )
 }
 
 
 
+
 @Composable
-fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
+fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit, context: Context) {
 
 
     Column {
@@ -218,13 +212,13 @@ fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Text("Dom Roque", color = Color.White, fontSize = 24.sp)
+                    Text(SelectBarberSession.name, color = Color.White, fontSize = 24.sp)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text("⭐ 4.8 (1238)", color = Color.White)
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("9:00 - 22:00", color = Color.White)
+                    Text("${SelectBarberSession.openHour}-${SelectBarberSession.closeHour}", color = Color.White)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Aberta agora", color = Color.Green)
                     Spacer(modifier = Modifier.height(10.dp))
@@ -237,7 +231,10 @@ fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White, shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                .background(
+                    Color.White,
+                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                )
                 .padding(16.dp)
         ) {
             Column {
@@ -248,14 +245,17 @@ fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
                     ReviewsContent()
                 } else {
                     Text(
-                        "Endereço: R. Prof. Atílio Innocenti, 731 - Vila Nova Conceição, São Paulo - SP, 04538-001",
+                        SelectBarberSession.addressDTO.toString(),
                         color = Color.Black
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Telefone: (11)95689-1314", color = Color.Black)
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
-                        onClick = { },
+                        onClick = {
+                            val intent = Intent(context, ServiceActivity::class.java)
+                            context.startActivity(intent)
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 8.dp),
@@ -267,10 +267,8 @@ fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
                 }
             }
         }
-
     }
 }
-
 
 
 @Composable
@@ -325,6 +323,7 @@ fun ReviewsContent() {
     }
 }
 
+
 @Composable
 fun ReviewItem(name: String, rating: Int, date: String, review: String) {
     Column(
@@ -359,7 +358,7 @@ fun ExpandableBarberImage() {
         lerp(minHeight, maxHeight, (minOffset - offsetY.value) / (minOffset - maxOffset))
     }
 
-    Column (
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .height(expandedHeight)
@@ -368,7 +367,8 @@ fun ExpandableBarberImage() {
                 detectDragGestures(
                     onDrag = { change, dragAmount ->
                         change.consume()
-                        val newOffset = (offsetY.value + dragAmount.y).coerceIn(maxOffset, minOffset)
+                        val newOffset =
+                            (offsetY.value + dragAmount.y).coerceIn(maxOffset, minOffset)
                         coroutineScope.launch {
                             offsetY.snapTo(newOffset)
                         }
@@ -396,10 +396,6 @@ fun ExpandableBarberImage() {
 }
 
 
-
-
-
-
 data class Review(val name: String, val rating: Int, val date: String, val text: String)
 
 
@@ -407,9 +403,17 @@ data class Review(val name: String, val rating: Int, val date: String, val text:
 val reviewList = listOf(
     Review("Derick Augusto", 5, "3 dias atrás", "Acompanhei um amigo, achei o lugar muito bom..."),
     Review("Gustavo Almeida", 5, "5 dias atrás", "Muito organizado e bem decorado..."),
-    Review("Lucas Prado", 4, "1 semana atrás", "Serviço excelente, mas a espera foi um pouco longa."),
-    Review("Fernanda Lopes", 5, "2 semanas atrás", "Ambiente confortável e profissionais incríveis!"),
+    Review(
+        "Lucas Prado",
+        4,
+        "1 semana atrás",
+        "Serviço excelente, mas a espera foi um pouco longa."
+    ),
+    Review(
+        "Fernanda Lopes",
+        5,
+        "2 semanas atrás",
+        "Ambiente confortável e profissionais incríveis!"
+    ),
     Review("Carla Dias", 4, "3 semanas atrás", "Gostei muito! Voltarei com certeza.")
 )
-
-
