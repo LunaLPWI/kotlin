@@ -49,53 +49,25 @@ import com.example.luna_project.ui.theme.activities.ProfileActivity
 @Composable
 fun RightDrawerContent(onCloseDrawer: () -> Unit) {
     val context = LocalContext.current
+    var currentScreen by remember { mutableStateOf("home") }
 
-    Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            IconButton(onClick = onCloseDrawer) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Close"
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(text = "Pedro Souza", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-
-            Spacer(modifier = Modifier.weight(1f))
+    when (currentScreen) {
+        "home" -> {
+            // Tela padrão do menu
+            DrawerHomeContent(
+                onCloseDrawer = onCloseDrawer,
+                onAgendamentosClick = { currentScreen = "appointments" },
+                onLogout = {
+                    val intent = Intent(context, LoginActivity::class.java)
+                    UserSession.clearSession()
+                    context.startActivity(intent)
+                }
+            )
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        MenuButton(icon = Icons.Default.Person, label = "Perfil") {
-            val intent = Intent(context, ProfileActivity::class.java)
-            context.startActivity(intent)
-        }
-
-        MenuButton(icon = Icons.Default.CalendarToday, label = "Agendamentos") {
-            // Exemplo de navegação futura
-        }
-
-        MenuButton(icon = Icons.Default.Favorite, label = "Favoritos") {
-            val intent = Intent(context, FavoriteActivity::class.java)
-            context.startActivity(intent)
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Button(
-            onClick = {
-                val intent = Intent(context, LoginActivity::class.java)
-                UserSession.clearSession()
-                context.startActivity(intent)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E004F))
-        ) {
-            Text("Sair", color = Color.White)
+        "appointments" -> {
+            AppointmentsScreen(
+                onBack = { currentScreen = "home" }
+            )
         }
     }
 }
@@ -211,5 +183,83 @@ fun MenuButton(icon: ImageVector, label: String, onClick: () -> Unit) {
         Icon(imageVector = icon, contentDescription = null, tint = Color.White)
         Spacer(modifier = Modifier.width(8.dp))
         Text(label, color = Color.White)
+    }
+}
+
+
+
+@Composable
+fun DrawerHomeContent(
+    onCloseDrawer: () -> Unit,
+    onAgendamentosClick: () -> Unit,
+    onLogout: () -> Unit
+) {
+    val context = LocalContext.current
+
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            IconButton(onClick = onCloseDrawer) {
+                Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = "Pedro Souza", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Spacer(modifier = Modifier.weight(1f))
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        MenuButton(icon = Icons.Default.Person, label = "Perfil") {
+            context.startActivity(Intent(context, ProfileActivity::class.java))
+        }
+
+        MenuButton(icon = Icons.Default.CalendarToday, label = "Agendamentos", onClick = onAgendamentosClick)
+
+        MenuButton(icon = Icons.Default.Favorite, label = "Favoritos") {
+            context.startActivity(Intent(context, FavoriteActivity::class.java))
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = onLogout,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E004F))
+        ) {
+            Text("Sair", color = Color.White)
+        }
+    }
+}
+
+
+@Composable
+fun AppointmentsScreen(onBack: () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.Default.Close, contentDescription = "Voltar", tint = Color.Black)
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = "Agendamentos", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Spacer(modifier = Modifier.weight(1f))
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Simule múltiplos agendamentos
+        listOf(1, 2).forEach {
+            AppointmentCard(
+                estabelecimento = "Dom Roque Barbearia",
+                status = "Confirmado",
+                data = "Terça, 1 de abril",
+                horario = "9:00h - 9:30h",
+                servico = "Corte de cabelo e barba",
+                barbeiro = "Derick Augusto",
+                valor = "R$80,00",
+                onCancel = { /* lógica de cancelamento */ }
+            )
+        }
     }
 }
