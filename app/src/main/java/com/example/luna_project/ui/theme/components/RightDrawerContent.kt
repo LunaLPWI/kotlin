@@ -9,6 +9,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
@@ -29,6 +32,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,10 +46,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.luna_project.data.models.SchedulingViewModel
 import com.example.luna_project.data.session.UserSession
 import com.example.luna_project.ui.theme.activities.FavoriteActivity
 import com.example.luna_project.ui.theme.activities.LoginActivity
 import com.example.luna_project.ui.theme.activities.ProfileActivity
+import com.example.luna_project.viewmodel.HomeViewModel
 
 @Composable
 fun RightDrawerContent(onCloseDrawer: () -> Unit) {
@@ -236,6 +244,13 @@ fun DrawerHomeContent(
 
 @Composable
 fun AppointmentsScreen(onBack: () -> Unit) {
+    val schedulingViewModel: SchedulingViewModel = viewModel()
+
+    val listSchedulings by schedulingViewModel.schedulingsClients.collectAsState()
+    LaunchedEffect(Unit) {
+
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
@@ -248,15 +263,26 @@ fun AppointmentsScreen(onBack: () -> Unit) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Simule múltiplos agendamentos
-        listOf(1, 2).forEach {
+//        // Simule múltiplos agendamentos
+//        LazyColumn(
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.spacedBy(8.dp) // Espaçamento entre os itens
+//        ) {
+//            // Usamos forEach para iterar sobre os itens
+//            items(barbershops.size) { index ->
+//                val barbershop = barbershops[index]
+//                BarberShopCard(barbershop) // Exibindo cada barbearia
+//            }
+//        }
+        listSchedulings.forEach { scheduling ->
+
             AppointmentCard(
-                estabelecimento = "Dom Roque Barbearia",
-                status = "Confirmado",
-                data = "Terça, 1 de abril",
-                horario = "9:00h - 9:30h",
-                servico = "Corte de cabelo e barba",
-                barbeiro = "Derick Augusto",
+                estabelecimento = scheduling.stablishmentName,
+                status = scheduling.status,
+                data = scheduling.startDateTime,
+                horario = scheduling.startDateTime,
+                servico = scheduling.items.toString(),
+                barbeiro = scheduling.nameEmployee,
                 valor = "R$80,00",
                 onCancel = { /* lógica de cancelamento */ }
             )

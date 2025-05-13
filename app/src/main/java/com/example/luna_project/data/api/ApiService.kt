@@ -3,6 +3,7 @@ package com.example.luna_project.data.api
 import com.example.luna_project.components.barberSection.Task
 import com.example.luna_project.data.DTO.Barber
 import com.example.luna_project.data.DTO.CadastroResponse
+import com.example.luna_project.data.DTO.ClientSchedulingDTOResponse
 import com.example.luna_project.data.DTO.EstablishmentResponse
 import com.example.luna_project.data.DTO.ResetPasswordDTO
 import com.example.luna_project.data.DTO.SchedulingRequestDTO
@@ -60,6 +61,13 @@ interface ApiService {
         @Header("Authorization") token: String, // <-- Adicionado aqui para passar o token
         @Query("name") name: String
     ): Response<List<EstablishmentResponse>>
+
+    @GET("schedules/client-schedules")
+    suspend fun getSchedulingClient(
+        @Header("Authorization") token: String, // <-- Adicionado aqui para passar o token
+        @Query("start") start: String,
+        @Query("clientId") clientId:Long
+    ): Response<List<ClientSchedulingDTOResponse>>
 
 
 
