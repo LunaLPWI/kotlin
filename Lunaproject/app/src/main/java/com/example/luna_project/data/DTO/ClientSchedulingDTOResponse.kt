@@ -6,5 +6,6 @@ data class ClientSchedulingDTOResponse (
     val items: List<EmployeeTaskDTO>,
     val nameEmployee: String,
     val status: String,
-    val stablishmentName: String
+    val stablishmentName: String,
+    val price: Double
 )

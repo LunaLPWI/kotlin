@@ -245,10 +245,10 @@ fun DrawerHomeContent(
 @Composable
 fun AppointmentsScreen(onBack: () -> Unit) {
     val schedulingViewModel: SchedulingViewModel = viewModel()
-
     val listSchedulings by schedulingViewModel.schedulingsClients.collectAsState()
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
-
+        schedulingViewModel.fetchSchedulings(context)
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -283,7 +283,7 @@ fun AppointmentsScreen(onBack: () -> Unit) {
                 horario = scheduling.startDateTime,
                 servico = scheduling.items.toString(),
                 barbeiro = scheduling.nameEmployee,
-                valor = "R$80,00",
+                valor =  "R$ $scheduling.price",
                 onCancel = { /* lógica de cancelamento */ }
             )
         }
