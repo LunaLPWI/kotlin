@@ -157,7 +157,6 @@ fun HeaderSection() {
         modifier = Modifier
             .height(200.dp)
     ) {
-        // COMENTA ISSO TEMPORARIAMENTE:
          Image(
             painter = painterResource(id = com.example.luna_project.R.drawable.barber_shop_image),
             contentDescription = null,

@@ -1,5 +1,6 @@
 package com.example.luna_project.components
 
+import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
@@ -43,6 +44,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -52,13 +54,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.luna_project.BarberShopList
 import com.example.luna_project.R
+import com.example.luna_project.java.FavoriteRepository
+import com.example.luna_project.ui.theme.activities.AppointmentActivity
+import com.example.luna_project.ui.theme.activities.FavoriteActivity
+import com.example.luna_project.ui.theme.activities.ProfileActivity
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -166,6 +172,7 @@ fun HomeScreenComponents() {
 
 @Composable
 fun RightDrawerContent(onCloseDrawer: () -> Unit) {
+    var context = LocalContext.current
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -195,9 +202,27 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        MenuButton(icon = Icons.Default.Person, label = "Perfil")
-        MenuButton(icon = Icons.Default.CalendarToday, label = "Agendamentos")
-        MenuButton(icon = Icons.Default.Favorite, label = "Favoritos")
+        MenuButton(
+            icon = Icons.Default.Person,
+            label = "Perfil",
+            onClick = {
+                val intent = Intent(context, ProfileActivity::class.java)
+                context.startActivity(intent)
+            })
+        MenuButton(
+            icon = Icons.Default.CalendarToday,
+            label = "Agendamentos",
+            onClick = {
+                val intent = Intent(context, AppointmentActivity::class.java)
+                context.startActivity(intent)
+            })
+        MenuButton(
+            icon = Icons.Default.Favorite,
+            label = "Favoritos",
+            onClick = {
+                val intent = Intent(context, FavoriteActivity::class.java)
+                context.startActivity(intent)
+            })
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -212,9 +237,13 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit) {
 }
 
 @Composable
-fun MenuButton(icon: ImageVector, label: String) {
+fun MenuButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
     Button(
-        onClick = { },
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
@@ -225,6 +254,7 @@ fun MenuButton(icon: ImageVector, label: String) {
         Text(label, color = Color.White)
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -270,9 +300,11 @@ fun LastVisitCard() {
                 contentScale = ContentScale.Crop
             )
 
-            Column(modifier = Modifier
-                .weight(1f)
-                .padding(start = 8.dp)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp)
+            ) {
                 Text(text = "Derick Augusto", color = Color.White)
                 Text(text = "Dom Roque", color = Color.Gray)
             }
@@ -284,21 +316,32 @@ fun LastVisitCard() {
     }
 }
 
+
 @Composable
 fun BarberShopList() {
+    val barberShops = List(10) { "Dom Roque #$it" }
+    val favoriteStates = remember { mutableStateMapOf<String, Boolean>() }
+
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(10) { // Substitua pela lista de dados
-            BarberShopCard()
+        items(barberShops.size) { index ->
+            val barberName = barberShops[index]
+            BarberShopCard(
+                barberName = barberName,
+                isFavorite = favoriteStates.getOrDefault(barberName, false),
+                onFavoriteChange = { isFav ->
+                    favoriteStates[barberName] = isFav
+                }
+            )
         }
     }
 }
 
 @Composable
-fun BarberShopCard() {
+fun BarberShopCard(barberName: String, isFavorite: Boolean, onFavoriteChange: (Boolean) -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF2E004F)),
         modifier = Modifier
@@ -306,17 +349,32 @@ fun BarberShopCard() {
             .padding(horizontal = 8.dp)
     ) {
         Column {
-            Image(
-                painter = painterResource(id = R.drawable.barber_shop_image),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentScale = ContentScale.Crop
-            )
+            Box {
+                Image(
+                    painter = painterResource(id = R.drawable.barber_shop_image),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentScale = ContentScale.Crop
+                )
+
+                IconButton(
+                    onClick = {},
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = "Favorito",
+                        tint = if (isFavorite) Color.Red else Color.White
+                    )
+                }
+            }
 
             Text(
-                text = "Dom Roque",
+                text = barberName,
                 color = Color.White,
                 modifier = Modifier.padding(8.dp)
             )
@@ -329,3 +387,6 @@ fun BarberShopCard() {
         }
     }
 }
+
+
+

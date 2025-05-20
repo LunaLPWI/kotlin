@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.sp
 import com.example.luna_project.R
 import com.example.luna_project.data.session.UserSession
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.luna_project.ui.theme.activities.LoginActivity
+import com.example.luna_project.ui.theme.activities.MainActivity
 import com.example.luna_project.ui.theme.activities.MainScreenActivityHome
 
 @Composable
@@ -37,19 +39,14 @@ fun ProfileScreen() {
                 .align(Alignment.TopCenter),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Ícone de fechar
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Start
             ) {
                 IconButton(onClick = {
-                    val intent = Intent(context, MainScreenActivityHome::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    }
+                    val intent = Intent(context, MainActivity::class.java)
                     context.startActivity(intent)
-
-                    (context as? Activity)?.finish()
                 }) {
                     Icon(
                         imageVector = Icons.Default.Close,

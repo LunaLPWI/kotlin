@@ -16,22 +16,26 @@ class MainScreenActivityHome : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Pega a latitude e longitude passadas pela Intent
         val latitude = intent.getDoubleExtra("latitude", 37.4220936)
         val longitude = intent.getDoubleExtra("longitude", -122.083922)
+        val clientId = intent.getLongExtra("clientId", -1L)
 
-        Log.d("MainScreenActivityHome", "Latitude: $latitude, Longitude: $longitude")
+        Log.d("MainScreenActivityHome", "Latitude: $latitude, Longitude: $longitude, ClientId: $clientId")
 
-        // Inicia o ViewModel para as barbearias
+        if (clientId == -1L) {
+            Log.e("MainScreenActivityHome", "clientId inválido, encerrando activity")
+            finish()
+            return
+        }
         barbershopViewModel = ViewModelProvider(this).get(BarbershopViewModel::class.java)
 
-        // Chama a função para buscar as barbearias com as coordenadas
         barbershopViewModel.fetchBarbershops(latitude, longitude)
 
         setContent {
             LunaprojectTheme {
-                MainScreen()
+                MainScreen(clientId = clientId)
             }
         }
     }
 }
+

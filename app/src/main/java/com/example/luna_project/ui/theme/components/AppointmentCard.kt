@@ -27,7 +27,7 @@ fun AppointmentCard(
     servico: String,
     barbeiro: String,
     valor: String,
-    onCancel: () -> Unit
+    onCancel: (() -> Unit?)?
 ) {
     Column(
         modifier = Modifier
@@ -61,7 +61,7 @@ fun AppointmentCard(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = onCancel,
+            onClick = onCancel as () -> Unit,
             colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White),
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {

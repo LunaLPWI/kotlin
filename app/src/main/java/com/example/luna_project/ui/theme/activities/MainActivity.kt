@@ -1,25 +1,17 @@
 package com.example.luna_project.ui.theme.activities
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.luna_project.MainScreen
-import com.example.luna_project.components.RegisterScreen
-import com.example.luna_project.data.viewmodel.LoginViewModel
-import com.example.luna_project.data.repository.LocationHelper
-import com.example.luna_project.ui.theme.LunaprojectTheme
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.luna_project.data.session.UserSession
+import com.example.luna_project.data.repository.LocationHelper
+import com.example.luna_project.data.viewmodel.LoginViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -27,6 +19,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         val loginViewModel = LoginViewModel()
         val user = loginViewModel.getUserSession(this)
         val userId = user?.id ?: -1
@@ -40,44 +33,40 @@ class MainActivity : ComponentActivity() {
             Log.d("myApp", "Usuário encontrado na sessão, redirecionando para a tela principal")
 
             // Inicializa o launcher de permissões
-            requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-                if (isGranted) {
-
-                    // Permissão concedida, acesse a localização
-                    acessarLocalizacao()
-                } else {
-                    // Permissão negada
-                    Toast.makeText(this, "Permissão de localização negada", Toast.LENGTH_SHORT).show()
+            requestPermissionLauncher =
+                registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+                    if (isGranted) {
+                        acessarLocalizacao(userId)
+                    } else {
+                        Toast.makeText(this, "Permissão de localização negada", Toast.LENGTH_SHORT)
+                            .show()
+                    }
                 }
-            }
 
             // Verifique se a permissão de localização foi concedida
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // Solicite a permissão de localização
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             } else {
-
-                acessarLocalizacao()
+                acessarLocalizacao(userId)
             }
         }
     }
 
     // Método que será chamado para acessar a localização depois que a permissão for concedida
-    private fun acessarLocalizacao() {
+    private fun acessarLocalizacao(userId: Long) {
         val locationHelper = LocationHelper(applicationContext)
         locationHelper.getCurrentLocation { latitude, longitude ->
-
             Log.d("Location", "Latitude: $latitude, Longitude: $longitude")
 
-            // Corrigindo a imutabilidade de latitude e longitude
-            var latitude = latitude
-            var longitude = longitude
-
-
-            // Agora que temos a localização, passamos para a MainScreen ou outra Activity
+            // Passa a localização E o clientId para a próxima tela
             val intent = Intent(this, MainScreenActivityHome::class.java).apply {
                 putExtra("latitude", latitude)
                 putExtra("longitude", longitude)
+                putExtra("clientId", userId) // <-- aqui é onde você passa o ID do cliente
             }
             startActivity(intent)
             finish()

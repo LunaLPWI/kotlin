@@ -35,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -49,13 +50,15 @@ import com.example.luna_project.data.models.Barbershop
 import com.example.luna_project.ui.theme.components.RightDrawerContent
 import com.example.luna_project.ui.theme.components.RightDrawerContentNotification
 import com.example.luna_project.viewmodel.HomeViewModel
+import updateFavoriteInBackend
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.collections.set
 
 
 @Composable
-fun MainScreen() {
+fun MainScreen(clientId: Long) {
     val context = LocalContext.current
     val homeViewModel: HomeViewModel = viewModel()
 
@@ -117,7 +120,7 @@ fun MainScreen() {
 
 
 
-            BarberShopList(listToShow)
+            BarberShopList(clientId, listToShow)
         }
 
         Row(
@@ -199,19 +202,33 @@ fun MainScreen() {
 }
 
 @Composable
-fun BarberShopList(barbershops: List<Barbershop>) {
+fun BarberShopList(clientId: Long, barbershops: List<Barbershop>) {
+    val favoriteStates = remember { mutableStateMapOf<Long, Boolean>() }
 
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp) // Espaçamento entre os itens
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Usamos forEach para iterar sobre os itens
+
         items(barbershops.size) { index ->
-            val barbershop = barbershops[index]
-            BarberShopCard(barbershop) // Exibindo cada barbearia
+            val barberShop = barbershops[index]
+            BarberShopCard(
+                clientId = clientId,
+                barbershop = barberShop,
+                barberName = barberShop.name,
+                isFavorite = favoriteStates.getOrDefault(barberShop.id, false),
+                onFavoriteChange = { isFav ->
+                    favoriteStates[barberShop.id] = isFav
+                    updateFavoriteInBackend(clientId, favoriteStates)
+                }
+            )
+
         }
     }
 }
+
+
+
 
 
 
