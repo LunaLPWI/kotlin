@@ -1,6 +1,7 @@
 package com.example.luna_project.ui.theme.components
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,8 +12,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -263,29 +266,32 @@ fun AppointmentsScreen(onBack: () -> Unit) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-//        // Simule múltiplos agendamentos
-//        LazyColumn(
-//            modifier = Modifier.fillMaxWidth(),
-//            horizontalArrangement = Arrangement.spacedBy(8.dp) // Espaçamento entre os itens
-//        ) {
-//            // Usamos forEach para iterar sobre os itens
-//            items(barbershops.size) { index ->
-//                val barbershop = barbershops[index]
-//                BarberShopCard(barbershop) // Exibindo cada barbearia
-//            }
-//        }
-        listSchedulings.forEach { scheduling ->
 
-            AppointmentCard(
-                estabelecimento = scheduling.stablishmentName,
-                status = scheduling.status,
-                data = scheduling.startDateTime,
-                horario = scheduling.startDateTime,
-                servico = scheduling.items.toString(),
-                barbeiro = scheduling.nameEmployee,
-                valor =  "R$ $scheduling.price",
-                onCancel = { /* lógica de cancelamento */ }
-            )
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(listSchedulings.size) { index ->
+                val scheduling = listSchedulings[index]
+                AppointmentCard(
+                    estabelecimento = scheduling.stablishmentName,
+                    status = scheduling.status,
+                    data = scheduling.startDateTime,
+                    horario = scheduling.startDateTime,
+                    servico = scheduling.items.toString(),
+                    barbeiro = scheduling.nameEmployee,
+                    valor = "R$ ${scheduling.price}",
+                    onCancel = {
+                        schedulingViewModel.fetchCancelSchedulings(context, scheduling.id) { success, message ->
+                            if (success) {
+                                schedulingViewModel.fetchSchedulings(context)
+                            }
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+            }
         }
     }
 }

@@ -43,7 +43,6 @@ import com.example.luna_project.data.DTO.Barber
 import com.example.luna_project.data.api.RetrofitClient
 import com.example.luna_project.data.session.SelectBarberSession
 import com.example.luna_project.data.session.UserSession
-import getNextHalfHour
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -136,7 +135,8 @@ fun ReserveSection(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val days = (0..5).map { LocalDate.now().plusDays(it.toLong()) }
+            val currentDay = LocalDate.now().plusDays(1)
+            val days = (0..5).map { currentDay.plusDays(it.toLong()) }
             items(days.size) { index ->
                 val date = days[index]
 

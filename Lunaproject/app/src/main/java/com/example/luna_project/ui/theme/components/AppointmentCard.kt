@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 
 @Composable
@@ -36,25 +39,27 @@ fun AppointmentCard(
             .background(Color(0xFF2E004F), shape = RoundedCornerShape(12.dp))
             .padding(16.dp)
     ) {
-        Text("Agenda", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.White)
+        Text("Barbearia", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.White)
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(estabelecimento, fontWeight = FontWeight.Bold, color = Color.White)
 
-        Text("Status: ", color = Color.White)
-        Text(
-            status,
-            color = Color.Green,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 8.dp)
-        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text("Data: $data", color = Color.White)
-        Text("Horário: $horario", color = Color.White)
-        Text("Serviço: $servico", color = Color.White)
+        val rawDate = "2025-05-20T10:00:00" // ou a variável que vem com esse valor
+        val formatterEntrada = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+        val formatterSaida = DateTimeFormatter.ofPattern("EEEE, dd 'de' MMMM", Locale("pt", "BR"))
+
+        val parsedDate = LocalDateTime.parse(rawDate, formatterEntrada)
+        val regex = Regex("""name=([^,]+)""") // captura tudo depois de name= até a próxima vírgula
+        val nomes = regex.findAll(servico).map { it.groupValues[1].trim() }.toList()
+
+// Resultado: ["Corte Masculino", "Barba"]
+        val nomesFormatados = nomes.joinToString(separator = ", ")
+        Text("📅 ${parsedDate.format(formatterSaida)}", color = Color.White)
+        Text("Serviços: $nomesFormatados", color = Color.White)
         Text("Barbeiro: $barbeiro", color = Color.White)
         Text("Valor: $valor", color = Color.White)
 

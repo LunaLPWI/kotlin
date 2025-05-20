@@ -1,6 +1,8 @@
 package com.example.luna_project.components.barberSection
 
 import ServiceScreenViewModel
+import android.app.Activity
+import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +33,8 @@ import com.example.luna_project.data.api.RetrofitClient
 import com.example.luna_project.data.session.SelectBarberSession
 import com.example.luna_project.data.session.UserSession
 import com.example.luna_project.data.viewmodel.LoginViewModel
+import com.example.luna_project.ui.theme.activities.MainScreenActivityHome
+import com.example.luna_project.ui.theme.activities.SucessefullScreenActivity
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -68,7 +72,7 @@ fun ConfirmationSection(
     val token = user?.token
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val data = LocalDate.parse(selectedDate, formatter)
-    val diaDaSemana = data.dayOfWeek.getDisplayName(TextStyle.FULL, Locale("pt", "BR"))
+    val activity = context as? Activity
 
 
     Column(modifier = Modifier.padding(16.dp)) {
@@ -161,6 +165,9 @@ fun ConfirmationSection(
                                     if (response.isSuccessful) {
                                         Log.d("ConfirmationSection", "Agendamento salvo com sucesso!")
                                         onConfirm()
+                                        val intent = Intent(context, SucessefullScreenActivity::class.java)
+                                        context.startActivity(intent)
+                                        activity?.finish()
                                     } else {
                                         Log.e("ConfirmationSection", "Erro ao salvar agendamento: ${response.code()} ${dto} ${UserSession.token}")
                                     }

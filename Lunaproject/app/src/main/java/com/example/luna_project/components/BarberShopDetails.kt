@@ -64,6 +64,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import com.example.luna_project.R
 import com.example.luna_project.data.session.SelectBarberSession
+import com.example.luna_project.data.session.UserSession
 import com.example.luna_project.data.viewmodel.LoginViewModel
 import com.example.luna_project.ui.theme.activities.MainActivity
 import com.example.luna_project.ui.theme.activities.ServiceActivity
@@ -72,6 +73,8 @@ import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -216,14 +219,27 @@ fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit, con
                     Spacer(modifier = Modifier.height(12.dp))
                     Text("⭐ 4.8 (1238)", color = Color.White)
                 }
+                val formatter = DateTimeFormatter.ofPattern("HH:mm")
+                val openTimeParsed = LocalTime.parse(SelectBarberSession.openHour)
+                val closeTimeParsed = LocalTime.parse(SelectBarberSession.closeHour)
+                val openTime = openTimeParsed.format(formatter)
+                val closeTime = closeTimeParsed.format(formatter)
+
+                val now = LocalTime.now()
+                val isOpen = now.isAfter(openTimeParsed) && now.isBefore(closeTimeParsed)
 
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("${SelectBarberSession.openHour}-${SelectBarberSession.closeHour}", color = Color.White)
+                    Text("$openTime - $closeTime", color = Color.White)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Aberta agora", color = Color.Green)
+                    Text(
+                        text = if (isOpen) "Aberta agora" else "Fechada agora",
+                        color = if (isOpen) Color.Green else Color.Red
+                    )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text("2.3 Km", color = Color.White)
                 }
+
+
             }
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -244,8 +260,16 @@ fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit, con
                 if (showReviews) {
                     ReviewsContent()
                 } else {
+                    val address = SelectBarberSession.addressDTO
+
+                    val formattedAddress = buildString {
+                        append("${address?.logradouro}, ${address?.number}")
+                        if (!address?.complemento.isNullOrBlank()) append(" - ${address.complemento}")
+                        append("\n${address?.bairro}, ${address?.cidade} - ${address?.uf}")
+                        append("\nCEP: ${address?.cep}")
+                    }
                     Text(
-                        SelectBarberSession.addressDTO.toString(),
+                        formattedAddress,
                         color = Color.Black
                     )
                     Spacer(modifier = Modifier.height(8.dp))

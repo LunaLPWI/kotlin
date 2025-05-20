@@ -1,3 +1,4 @@
+import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
@@ -82,6 +83,7 @@ import java.time.LocalDate
                     IconButton(onClick = {
                         val intent = Intent(context, MainActivity::class.java)
                         context.startActivity(intent)
+                        (context as? Activity)?.finish()
                     }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = null)
                     }

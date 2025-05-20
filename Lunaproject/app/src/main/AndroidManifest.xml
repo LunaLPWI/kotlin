@@ -26,6 +26,9 @@
             android:name=".ui.theme.activities.LoginActivity"
             android:exported="true" />
         <activity
+            android:name=".ui.theme.activities.SucessefullScreenActivity"
+            android:exported="true" />
+        <activity
             android:name=".ui.theme.activities.ResetPasswordActivity"
             android:exported="true" />
         <activity
