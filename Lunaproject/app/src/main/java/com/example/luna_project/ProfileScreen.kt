@@ -1,59 +1,39 @@
+import android.app.Activity
+import android.content.Intent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.luna_project.R
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.luna_project.presentation.activities.MainScreenActivityHome
 
 @Composable
-fun ProfileScreen(navController: NavController) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 16.dp) // Adiciona espaço na parte inferior
-    ) {
+fun ProfileScreen() {
+    // Obtendo uma instância do ViewModel
+    val profileViewModel: ProfileViewModel = viewModel()
+
+    val context = LocalContext.current
+
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()), // Adiciona scroll quando necessário
+                .align(Alignment.TopCenter),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Ícone de fechar
@@ -62,7 +42,14 @@ fun ProfileScreen(navController: NavController) {
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Start
             ) {
-                IconButton(onClick = { navController.navigate("home") }) {
+                IconButton(onClick = {
+                    val intent = Intent(context, MainScreenActivityHome::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    context.startActivity(intent)
+
+                    (context as? Activity)?.finish()
+                }) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Fechar"
@@ -82,32 +69,12 @@ fun ProfileScreen(navController: NavController) {
             Image(
                 painter = painterResource(id = R.drawable.ic_user),
                 contentDescription = "Foto do perfil",
-                contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(120.dp)
-                    .clip(RoundedCornerShape(60.dp))
+                    .size(120.dp) // define o tamanho final
+                    .clip(RoundedCornerShape(60.dp)) // borda arredondada
+                    .aspectRatio(1f) // mantém a proporção quadrada
             )
 
-            // Card com informações
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xff240c51)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = "Pedro Souza", color = Color.White, fontWeight = FontWeight.Bold)
-                    Text(text = "(11)xxxxx-1314", color = Color.White)
-                    Text(text = "Pedro@gmail.com", color = Color.White)
-                    Text(text = "xxxxxxxxxxxxxxxx", color = Color.White)
-                }
-            }
 
             // Título "Editar"
             Text(
@@ -126,14 +93,44 @@ fun ProfileScreen(navController: NavController) {
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    ProfileField(label = "Nome:", hint = "ex: Enzo Valentino")
-                    ProfileField(label = "Número:", hint = "ex: (99) 9999-999")
-                    ProfileField(label = "E-mail:", hint = "ex: email@gmail.com")
-                    ProfileField(label = "Senha:", hint = "*******")
+                    ProfileField(
+                        label = "Nome:",
+                        hint = "ex: Enzo Valentino",
+                        value = profileViewModel.name.value,
+                        isEditable = profileViewModel.isNameEditable.value,
+                        onValueChange = { profileViewModel.name.value = it },
+                        onEditClick = { profileViewModel.toggleNameEditable() }
+                    )
+                    ProfileField(
+                        label = "Número:",
+                        hint = "ex: (99) 9999-999",
+                        value = profileViewModel.phone.value,
+                        isEditable = profileViewModel.isPhoneEditable.value,
+                        onValueChange = { profileViewModel.phone.value = it },
+                        onEditClick = { profileViewModel.togglePhoneEditable() }
+                    )
+                    ProfileField(
+                        label = "E-mail:",
+                        hint = "ex: email@gmail.com",
+                        value = profileViewModel.email.value,
+                        isEditable = profileViewModel.isEmailEditable.value,
+                        onValueChange = { profileViewModel.email.value = it },
+                        onEditClick = { profileViewModel.toggleEmailEditable() }
+                    )
+                    ProfileField(
+                        label = "Senha:",
+                        hint = "*******",
+                        value = profileViewModel.password.value,
+                        isEditable = profileViewModel.isPasswordEditable.value,
+                        onValueChange = { profileViewModel.password.value = it },
+                        onEditClick = { profileViewModel.togglePasswordEditable() }
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = { /* Ação do botão */ },
+                        onClick = {
+                            profileViewModel.confirmChanges()  // Aqui você pode chamar a função que salva ou valida os dados
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White)
                     ) {
@@ -146,29 +143,38 @@ fun ProfileScreen(navController: NavController) {
 }
 
 @Composable
-fun ProfileField(label: String, hint: String) {
-    var text by remember { mutableStateOf(TextFieldValue("")) }
-
-    Column(modifier = Modifier.padding(vertical = 5.dp)) {
-        Text(text = label, color = Color.White)
-        OutlinedTextField(
-            value = text,
-            onValueChange = { newValue -> text = newValue },
-            placeholder = { Text(hint, color = Color.Gray) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            textStyle = TextStyle(color = Color.Black),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black,
-                focusedBorderColor = Color.Transparent,
-                unfocusedBorderColor = Color.Transparent,
-                cursorColor = Color.Black,
-                focusedPlaceholderColor = Color.Gray,
-                unfocusedPlaceholderColor = Color.Gray
+fun ProfileField(
+    label: String,
+    hint: String,
+    value: String,
+    isEditable: Boolean,
+    onValueChange: (String) -> Unit,
+    onEditClick: () -> Unit
+) {
+    Row(modifier = Modifier.padding(vertical = 5.dp)) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = label, color = Color.White)
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                placeholder = { Text(hint) },
+                enabled = isEditable, // Controle de habilitação
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = if (isEditable) Color.White else Color.Gray.copy(alpha = 0.4f),
+                    unfocusedContainerColor = if (isEditable) Color.White else Color.Gray.copy(alpha = 0.4f),
+                    disabledContainerColor = Color.Gray.copy(alpha = 0.4f)
+                )
             )
-        )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        IconButton(onClick = onEditClick) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Editar",
+                tint = Color.White // Cor do ícone de editar
+            )
+        }
     }
 }

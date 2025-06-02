@@ -1,3 +1,6 @@
+import org.gradle.kotlin.dsl.debugImplementation
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -41,7 +44,27 @@ android {
 
 dependencies {
 
-
+    implementation("com.google.android.gms:play-services-location:18.0.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("androidx.compose.ui:ui:1.4.1")
+    implementation("androidx.compose.material3:material3:1.0.0")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.4.1")
+    implementation(libs.androidx.runtime.livedata)
+    debugImplementation("androidx.compose.ui:ui-tooling:1.4.1")
+    implementation ("androidx.compose.ui:ui:1.0.5")
+    implementation ("androidx.compose.material:material:1.0.5")
+    implementation ("androidx.compose.material:material-icons-core:1.0.5")
+    implementation ("androidx.compose.material:material-icons-extended:1.0.5")
+    implementation ("androidx.compose.material3:material3:1.0.0-alpha01")
+    implementation ("androidx.compose.ui:ui-tooling-preview:1.0.5")
+    implementation ("org.osmdroid:osmdroid-android:6.1.11")
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("androidx.compose.material3:material3:1.0.1")
+    implementation("androidx.navigation:navigation-compose:2.7.3")
     implementation ("androidx.compose.material:material-icons-extended:<latest_version>")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -55,7 +78,8 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.cardview)
-    implementation(libs.androidx.espresso.core)
+    implementation(libs.material)
+    implementation(libs.androidx.activity)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -67,5 +91,4 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-
 }
