@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01ba89e9-bc19-4f5d-a467-bbf8196398c5" name="Changes" comment="" />
+    <list default="true" id="01ba89e9-bc19-4f5d-a467-bbf8196398c5" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -47,8 +49,11 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "viewModels",
-    "last_opened_file_path": "C:/Users/Lucas Santos/OneDrive - V8.TECH/Documentos/PI IV/kotlin/kotlin/build.gradle.kts"
+    "git-widget-placeholder": "feature/tela-favoritos",
+    "last_opened_file_path": "C:/Users/Lucas Santos/OneDrive - V8.TECH/Documentos/PI IV/kotlin/kotlin/build.gradle.kts",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.17",
+    "project.structure.side.proportion": "0.2"
   }
 }]]></component>
   <component name="RunManager">
