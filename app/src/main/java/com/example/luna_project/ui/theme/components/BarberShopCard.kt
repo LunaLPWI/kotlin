@@ -29,12 +29,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.luna_project.R
+import com.example.luna_project.data.DTO.EstablishmentResponseDTO
+import com.example.luna_project.data.DTO.FavoriteEstablishmentsDTO
 import com.example.luna_project.data.models.Barbershop
 import com.example.luna_project.data.session.SelectBarberSession
 import com.example.luna_project.java.FavoriteRepository
 import com.example.luna_project.ui.theme.activities.BarberLocationActivity
 import com.example.luna_project.viewmodel.HomeViewModel
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -43,6 +47,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
 import java.io.IOException
+import kotlin.jvm.java
 
 @Composable
 fun BarberShopCard(
@@ -144,6 +149,70 @@ fun updateFavoriteInBackend(clientId: Long, favoriteMap: Map<Long, Boolean>) {
         }
     })
 }
+
+fun fetchFavorites(clientId: Long, onResult: (Map<Long, Boolean>) -> Unit) {
+    val client = OkHttpClient()
+
+    val request = Request.Builder()
+        .url("http://10.0.2.2:8080/clients/$clientId/favorites")
+        .get()
+        .build()
+
+    client.newCall(request).enqueue(object : Callback {
+        override fun onFailure(call: Call, e: IOException) {
+            Log.e("API", "Erro ao buscar favoritos", e)
+            onResult(emptyMap())
+        }
+
+        override fun onResponse(call: Call, response: Response) {
+            response.use {
+                if (!response.isSuccessful) {
+                    Log.e("API", "Erro na resposta: ${response.code}")
+                    onResult(emptyMap())
+                } else {
+                    val body = response.body?.string()
+                    val gson = Gson()
+
+                    val favorites = gson.fromJson(body, FavoriteEstablishmentsDTO::class.java)
+
+                    val favoriteMap = favorites.establishmentIds.associateWith { true }
+                    onResult(favoriteMap)
+                }
+            }
+        }
+    })
+}
+suspend fun fetchFavoritesIds(clientId: Long): List<Long> {
+    return withContext(Dispatchers.IO) {
+        val client = OkHttpClient()
+
+        val request = Request.Builder()
+            .url("http://10.0.2.2:8080/clients/$clientId/favorites")
+            .get()
+            .build()
+
+        try {
+            val response = client.newCall(request).execute()
+            if (!response.isSuccessful) {
+                throw IOException("Erro na resposta: ${response.code}")
+            }
+
+            val body = response.body?.string() ?: throw IOException("Corpo vazio")
+            val gson = Gson()
+
+            val favorites = gson.fromJson(body, FavoriteEstablishmentsDTO::class.java)
+
+            favorites.establishmentIds
+        } catch (e: Exception) {
+            Log.e("API", "Erro ao buscar favoritos", e)
+            emptyList()
+        }
+    }
+}
+
+
+
+
 
 
 

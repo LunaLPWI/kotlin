@@ -50,11 +50,11 @@ import com.example.luna_project.data.models.Barbershop
 import com.example.luna_project.ui.theme.components.RightDrawerContent
 import com.example.luna_project.ui.theme.components.RightDrawerContentNotification
 import com.example.luna_project.viewmodel.HomeViewModel
+import fetchFavorites
 import updateFavoriteInBackend
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.collections.set
 
 
 @Composable
@@ -172,6 +172,8 @@ fun MainScreen(clientId: Long) {
                     .padding(16.dp)
             ) {
                 RightDrawerContent(
+                    clientId = clientId,
+                    barbershops = listToShow,
                     onCloseDrawer = { homeViewModel.closeDrawer() }
                 )
             }
@@ -196,20 +198,23 @@ fun MainScreen(clientId: Long) {
             }
         }
     }
-
-
-
 }
 
 @Composable
 fun BarberShopList(clientId: Long, barbershops: List<Barbershop>) {
     val favoriteStates = remember { mutableStateMapOf<Long, Boolean>() }
 
+    LaunchedEffect(clientId) {
+        fetchFavorites(clientId) { fetchedFavorites ->
+            favoriteStates.clear()
+            favoriteStates.putAll(fetchedFavorites)
+        }
+    }
+
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-
         items(barbershops.size) { index ->
             val barberShop = barbershops[index]
             BarberShopCard(
@@ -222,15 +227,9 @@ fun BarberShopList(clientId: Long, barbershops: List<Barbershop>) {
                     updateFavoriteInBackend(clientId, favoriteStates)
                 }
             )
-
         }
     }
 }
-
-
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

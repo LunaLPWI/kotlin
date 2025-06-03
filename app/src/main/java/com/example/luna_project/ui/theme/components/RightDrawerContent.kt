@@ -40,6 +40,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.luna_project.BarberShopList
+import com.example.luna_project.data.models.Barbershop
 import com.example.luna_project.data.models.SchedulingViewModel
 import com.example.luna_project.data.session.UserSession
 import com.example.luna_project.ui.theme.activities.FavoriteActivity
@@ -47,7 +49,7 @@ import com.example.luna_project.ui.theme.activities.LoginActivity
 import com.example.luna_project.ui.theme.activities.ProfileActivity
 
 @Composable
-fun RightDrawerContent(onCloseDrawer: () -> Unit) {
+fun RightDrawerContent(clientId: Long, barbershops: List<Barbershop>, onCloseDrawer: () -> Unit) {
     val context = LocalContext.current
     var currentScreen by remember { mutableStateOf("home") }
 
@@ -55,6 +57,8 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit) {
         "home" -> {
             // Tela padrão do menu
             DrawerHomeContent(
+                clientId = clientId,
+                barbershops = barbershops,
                 onCloseDrawer = onCloseDrawer,
                 onAgendamentosClick = { currentScreen = "appointments" },
                 onLogout = {
@@ -64,6 +68,7 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit) {
                 }
             )
         }
+
         "appointments" -> {
             AppointmentsScreen(
                 onBack = { currentScreen = "home" }
@@ -124,7 +129,10 @@ fun NotificationCard(title: String, message: String, onConfirm: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .background(Color(0xFF2E004F), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+            .background(
+                Color(0xFF2E004F),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+            )
             .padding(16.dp)
     ) {
         Text(
@@ -146,7 +154,8 @@ fun NotificationCard(title: String, message: String, onConfirm: () -> Unit) {
 
         if (selectedStars > 0) {
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onConfirm,
+            Button(
+                onClick = onConfirm,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
             ) {
@@ -171,6 +180,7 @@ fun RatingStars(selectedStars: Int, onRatingSelected: (Int) -> Unit) {
         }
     }
 }
+
 @Composable
 fun MenuButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     Button(
@@ -187,9 +197,10 @@ fun MenuButton(icon: ImageVector, label: String, onClick: () -> Unit) {
 }
 
 
-
 @Composable
 fun DrawerHomeContent(
+    clientId: Long,
+    barbershops: List<Barbershop>,
     onCloseDrawer: () -> Unit,
     onAgendamentosClick: () -> Unit,
     onLogout: () -> Unit
@@ -215,11 +226,20 @@ fun DrawerHomeContent(
             context.startActivity(Intent(context, ProfileActivity::class.java))
         }
 
-        MenuButton(icon = Icons.Default.CalendarToday, label = "Agendamentos", onClick = onAgendamentosClick)
+        MenuButton(
+            icon = Icons.Default.CalendarToday,
+            label = "Agendamentos",
+            onClick = onAgendamentosClick
+        )
 
         MenuButton(icon = Icons.Default.Favorite, label = "Favoritos") {
-            context.startActivity(Intent(context, FavoriteActivity::class.java))
+            val intent = Intent(context, FavoriteActivity::class.java).apply {
+                putExtra("clientId", clientId)
+                putExtra("barbershops", ArrayList(barbershops))
+            }
+            context.startActivity(intent)
         }
+
 
         Spacer(modifier = Modifier.weight(1f))
 
