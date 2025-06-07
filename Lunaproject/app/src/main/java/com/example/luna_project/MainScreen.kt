@@ -2,7 +2,6 @@ package com.example.luna_project
 
 import BarberShopCard
 import BarbershopViewModel
-import LastVisitCard
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -74,7 +73,7 @@ fun MainScreen() {
     LaunchedEffect(Unit, user) {
         homeViewModel.loadUserSession(context)
         user?.let {
-            homeViewModel.fetchLastScheduling(it.id)
+//            homeViewModel.fetchLastScheduling(it.id)
         }
     }
 
@@ -114,7 +113,7 @@ fun MainScreen() {
                 modifier = Modifier.padding(vertical = 16.dp)
             )
 
-            LastVisitCard()
+//            LastVisitCard()
 
             Text(
                 text = "Barbearias Próximas",
