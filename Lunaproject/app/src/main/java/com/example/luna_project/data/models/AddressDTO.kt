@@ -1,4 +1,7 @@
 package com.example.luna_project.data.models
+
+import java.io.Serializable
+
 data class AddressDTO(
     var cep: String? = null,
     var logradouro: String? = null,
@@ -7,7 +10,8 @@ data class AddressDTO(
     var cidade: String? = null,
     var bairro: String? = null,
     var uf: String? = null
-) {
+): Serializable
+{
     fun formatAddress(): String {
         val addressBuilder = StringBuilder()
 

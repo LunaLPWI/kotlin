@@ -61,8 +61,6 @@ class LoginViewModel : ViewModel() {
                     response.body()?.let { user ->
                         // Salva no SharedPreferences
                         saveUserSession(context, user)
-
-                        // Salva diretamente no objeto UserSession
                         UserSession.id = user.id
                         UserSession.name = user.name
                         UserSession.email = user.email

@@ -157,7 +157,7 @@ fun HomeScreenComponents() {
                     .background(Color.White)
                     .padding(16.dp)
             ) {
-                RightDrawerContent { isDrawerOpen = false }
+//                RightDrawerContent { isDrawerOpen = false }
             }
         }
     }

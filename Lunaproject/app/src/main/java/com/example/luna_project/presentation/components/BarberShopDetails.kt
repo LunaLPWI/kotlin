@@ -36,6 +36,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,11 +59,15 @@ import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.luna_project.R
 import com.example.luna_project.data.repository.LocationHelper
 import com.example.luna_project.data.session.SelectBarberSession
+import com.example.luna_project.data.session.UserSession
 import com.example.luna_project.presentation.activities.MainActivity
 import com.example.luna_project.presentation.activities.ServiceActivity
+import com.example.luna_project.presentation.viewmodel.AssessmentViewModel
+import com.example.luna_project.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
@@ -280,8 +285,13 @@ fun BarberInfo(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit, con
                 ButtonBar(showReviews, onShowReviewsChange)
                 Spacer(modifier = Modifier.height(8.dp))
 
+
+
                 if (showReviews) {
-                    ReviewsContent()
+
+                    val assessmentViewModel: AssessmentViewModel = viewModel()
+                    val homeViewModel: HomeViewModel = viewModel()
+                    ReviewsContent(assessmentViewModel, homeViewModel)
                 } else {
                     val address = SelectBarberSession.addressDTO
 
@@ -346,8 +356,19 @@ fun ButtonBar(showReviews: Boolean, onShowReviewsChange: (Boolean) -> Unit) {
     }
 }
 
+
 @Composable
-fun ReviewsContent() {
+fun ReviewsContent(
+    viewModel: AssessmentViewModel,
+    homeViewModel: HomeViewModel
+) {
+    val assessments by viewModel.assessmentsByEstablishment.collectAsState()
+
+    LaunchedEffect(SelectBarberSession.id) {
+        Log.d("ReviewsContent", "User token: ${UserSession.token}")
+        viewModel.fetchAssessmentsByEstablishment(UserSession.token , SelectBarberSession.id)
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -357,31 +378,29 @@ fun ReviewsContent() {
             contentPadding = PaddingValues(bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(reviewList) { review ->
+            items(assessments) { assessment ->
                 ReviewItem(
-                    name = review.name,
-                    rating = review.rating,
-                    date = review.date,
-                    review = review.text
+                    name = assessment.clientName,
+                    rating = assessment.rating?.toInt() ?: 0,
+                    review = assessment.messaging ?: ""
                 )
             }
         }
     }
 }
 
-
 @Composable
-fun ReviewItem(name: String, rating: Int, date: String, review: String) {
+fun ReviewItem(name: String, rating: Int, review: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
-            .background(Color(0xFF3F51B5), shape = RoundedCornerShape(16.dp))
+            .padding(horizontal = 8.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFF3F51B5))
             .padding(16.dp)
     ) {
         Text(text = name, color = Color.White, fontSize = 20.sp)
         Text(text = "⭐".repeat(rating), color = Color.Yellow, fontSize = 16.sp)
-        Text(text = date, color = Color.White, fontSize = 12.sp)
         Text(text = review, color = Color.LightGray, fontSize = 14.sp)
     }
 }
@@ -442,24 +461,7 @@ fun ExpandableBarberImage() {
 }
 
 
-data class Review(val name: String, val rating: Int, val date: String, val text: String)
+
 
 
 // Colocar dados do banco aqui!
-val reviewList = listOf(
-    Review("Derick Augusto", 5, "3 dias atrás", "Acompanhei um amigo, achei o lugar muito bom..."),
-    Review("Gustavo Almeida", 5, "5 dias atrás", "Muito organizado e bem decorado..."),
-    Review(
-        "Lucas Prado",
-        4,
-        "1 semana atrás",
-        "Serviço excelente, mas a espera foi um pouco longa."
-    ),
-    Review(
-        "Fernanda Lopes",
-        5,
-        "2 semanas atrás",
-        "Ambiente confortável e profissionais incríveis!"
-    ),
-    Review("Carla Dias", 4, "3 semanas atrás", "Gostei muito! Voltarei com certeza.")
-)

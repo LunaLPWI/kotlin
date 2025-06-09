@@ -12,6 +12,7 @@ import com.example.luna_project.data.repository.LocationHelper
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import com.example.luna_project.data.session.UserSession
 
 class MainActivity : ComponentActivity() {
 
@@ -22,6 +23,7 @@ class MainActivity : ComponentActivity() {
         val loginViewModel = LoginViewModel()
         val user = loginViewModel.getUserSession(this)
         val userId = user?.id ?: -1
+        UserSession.token = user?.token.toString()
 
         if (userId.toInt() == -1) {
             Log.d("myApp", "Usuário não encontrado na sessão, redirecionando para o cadastro")

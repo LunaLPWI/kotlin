@@ -1,6 +1,9 @@
 package com.example.luna_project.data.network
 
 
+import com.example.luna_project.data.models.AssessmentRequest
+import com.example.luna_project.data.models.AssessmentResponse
+import com.example.luna_project.data.models.AssessmentUpdateDTO
 import com.example.luna_project.data.models.Barber
 import com.example.luna_project.data.models.CadastroResponse
 import com.example.luna_project.data.models.ClientSchedulingDTOResponse
@@ -20,6 +23,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -76,11 +80,31 @@ interface ApiService {
         @Header("Authorization") token: String
     ): Response<Void>
 
-    @GET("schedules/lastscheduling")
+    @GET("schedules/lastscheduling/{clientId}")
     suspend fun getLastSchedulingClient(
-        @Header("Authorization") token: String, // <-- Adicionado aqui para passar o token
-        @Query("clientId") clientId:Long
+        @Header("Authorization") token: String,
+        @Path("clientId") clientId: Long
     ): Response<ClientSchedulingDTOResponse>
+
+    @PUT("Assessment/{id}")
+    suspend fun updateAssessment(
+        @Header("Authorization") token: String,
+        @Path("id") id: Long,
+        @Body dto: AssessmentUpdateDTO
+    ): Response<AssessmentResponse>
+
+    @GET("Assessment/client")
+    suspend fun getAssessments(
+        @Header("Authorization") token: String,
+        @Query("clientId") clientId: Long?,
+        @Query("timestamp") timestamp: String
+    ): List<AssessmentResponse>
+
+    @GET("Assessment")
+    suspend fun getAssessmentsByEstablishment(
+        @Header("Authorization") token: String,
+        @Query("establishmentId") establishmentId: Long?,
+    ): List<AssessmentResponse>
 
 
 

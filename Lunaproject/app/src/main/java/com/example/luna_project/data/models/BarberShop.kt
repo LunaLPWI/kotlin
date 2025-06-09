@@ -1,5 +1,7 @@
 package com.example.luna_project.data.models
 
+import java.io.Serializable
+
 data class Barbershop(
     val id: Long,
     val name: String,
@@ -12,4 +14,4 @@ data class Barbershop(
     val  logn:Double,
     val  avarageRating: Double
 
-)
+) : Serializable

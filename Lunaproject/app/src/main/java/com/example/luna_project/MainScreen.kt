@@ -2,6 +2,7 @@ package com.example.luna_project
 
 import BarberShopCard
 import BarbershopViewModel
+import LastVisitCard
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -35,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -48,7 +50,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.luna_project.data.models.Barbershop
 import com.example.luna_project.presentation.components.RightDrawerContent
 import com.example.luna_project.presentation.components.RightDrawerContentNotification
+import com.example.luna_project.presentation.viewmodel.AssessmentViewModel
 import com.example.luna_project.viewmodel.HomeViewModel
+import fetchFavorites
+import updateFavoriteInBackend
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -56,24 +61,24 @@ import java.util.Locale
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun MainScreen() {
+fun MainScreen(clientId: Long) {
     val context = LocalContext.current
     val homeViewModel: HomeViewModel = viewModel()
-
     val user by homeViewModel.user.collectAsState()
     val isDrawerOpen by homeViewModel.isDrawerOpen.collectAsState()
     val isDrawerNotificationOpen by homeViewModel.isNotificationDrawerOpen.collectAsState()
     val barbershopViewModel: BarbershopViewModel = viewModel()
+    val assessmentViewModel: AssessmentViewModel = viewModel()
     val barbershops by barbershopViewModel.barbershops.collectAsState()
     val barbershopsSearch by barbershopViewModel.barbershopsSearch.collectAsState()
     val searchQuery = remember { mutableStateOf("") }
     val listToShow = if (searchQuery.value.isBlank()) barbershops else barbershopsSearch
-    val lastScheduling = homeViewModel.lastScheduling.value
+    val lastScheduling by homeViewModel.lastScheduling.collectAsState()
 
     LaunchedEffect(Unit, user) {
         homeViewModel.loadUserSession(context)
         user?.let {
-//            homeViewModel.fetchLastScheduling(it.id)
+            homeViewModel.fetchLastScheduling(it.id)
         }
     }
 
@@ -106,14 +111,7 @@ fun MainScreen() {
                     barbershopViewModel.fetchSearchBaberShops(query)
                 }
             )
-
-            Text(
-                text = "Última Visita",
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 16.dp)
-            )
-
-//            LastVisitCard()
+//            LastVisitCard(lastScheduling)
 
             Text(
                 text = "Barbearias Próximas",
@@ -123,7 +121,7 @@ fun MainScreen() {
 
 
 
-            BarberShopList(listToShow)
+            BarberShopList(clientId, listToShow)
         }
 
         Row(
@@ -175,6 +173,8 @@ fun MainScreen() {
                     .padding(16.dp)
             ) {
                 RightDrawerContent(
+                    clientId = clientId,
+                    barbershops = listToShow,
                     onCloseDrawer = { homeViewModel.closeDrawer() }
                 )
             }
@@ -194,7 +194,8 @@ fun MainScreen() {
                     .padding(16.dp)
             ) {
                 RightDrawerContentNotification(
-                    onCloseDrawer = { homeViewModel.closeNotificationDrawer() }
+                    onCloseDrawer = { homeViewModel.closeNotificationDrawer() },
+                    assessmentViewModel,
                 )
             }
         }
@@ -205,16 +206,32 @@ fun MainScreen() {
 }
 
 @Composable
-fun BarberShopList(barbershops: List<Barbershop>) {
+fun BarberShopList(clientId: Long, barbershops: List<Barbershop>) {
+    val favoriteStates = remember { mutableStateMapOf<Long, Boolean>() }
+
+    LaunchedEffect(clientId) {
+        fetchFavorites(clientId) { fetchedFavorites ->
+            favoriteStates.clear()
+            favoriteStates.putAll(fetchedFavorites)
+        }
+    }
 
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp) // Espaçamento entre os itens
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Usamos forEach para iterar sobre os itens
         items(barbershops.size) { index ->
-            val barbershop = barbershops[index]
-            BarberShopCard(barbershop) // Exibindo cada barbearia
+            val barberShop = barbershops[index]
+            BarberShopCard(
+                clientId = clientId,
+                barbershop = barberShop,
+                barberName = barberShop.name,
+                isFavorite = favoriteStates.getOrDefault(barberShop.id, false),
+                onFavoriteChange = { isFav ->
+                    favoriteStates[barberShop.id] = isFav
+                    updateFavoriteInBackend(clientId, favoriteStates)
+                }
+            )
         }
     }
 }

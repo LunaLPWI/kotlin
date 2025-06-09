@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
@@ -26,15 +27,19 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,17 +47,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.luna_project.presentation.viewmodel.SchedulingViewModel
+import com.example.luna_project.data.models.AssessmentResponse
+import com.example.luna_project.data.models.Barbershop
 import com.example.luna_project.data.session.UserSession
-import com.example.luna_project.presentation.activities.FavoriteActivity
 import com.example.luna_project.presentation.activities.LoginActivity
 import com.example.luna_project.presentation.activities.ProfileActivity
+import com.example.luna_project.presentation.viewmodel.AssessmentViewModel
+import com.example.luna_project.presentation.viewmodel.SchedulingViewModel
+import com.example.luna_project.ui.theme.activities.FavoriteActivity
+import com.example.luna_project.viewmodel.HomeViewModel
+import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
 @Composable
-fun RightDrawerContent(onCloseDrawer: () -> Unit) {
+fun RightDrawerContent(clientId: Long, barbershops: List<Barbershop>, onCloseDrawer: () -> Unit) {
     val context = LocalContext.current
     var currentScreen by remember { mutableStateOf("home") }
 
@@ -60,6 +72,8 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit) {
         "home" -> {
             // Tela padrão do menu
             DrawerHomeContent(
+                clientId = clientId,
+                barbershops = barbershops,
                 onCloseDrawer = onCloseDrawer,
                 onAgendamentosClick = { currentScreen = "appointments" },
                 onLogout = {
@@ -69,6 +83,7 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit) {
                 }
             )
         }
+
         "appointments" -> {
             AppointmentsScreen(
                 onBack = { currentScreen = "home" }
@@ -79,62 +94,115 @@ fun RightDrawerContent(onCloseDrawer: () -> Unit) {
 
 
 @Composable
-fun RightDrawerContentNotification(onCloseDrawer: () -> Unit) {
-    var showNotification by remember { mutableStateOf(true) }
+fun RightDrawerContentNotification(
+    onCloseDrawer: () -> Unit,
+    assessmentViewModel: AssessmentViewModel,
+) {
+    val context = LocalContext.current
+    val timestamp = remember { LocalDateTime.now() }
+    val homeViewModel: HomeViewModel = viewModel()
 
-    Column(
-        modifier = Modifier.padding(16.dp)
-    ) {
+    val user by homeViewModel.user.collectAsState()
+
+    LaunchedEffect(user?.id) {
+        assessmentViewModel.fetchAssessments(user?.token ?: "0", user?.id ?: 0, timestamp, context)
+    }
+
+    var notifications by remember { mutableStateOf<List<AssessmentResponse>>(emptyList()) }
+    val assessmentsState by assessmentViewModel.assessments.collectAsState()
+
+    LaunchedEffect(assessmentsState) {
+        notifications = assessmentsState
+    }
+
+    val scope = rememberCoroutineScope()
+
+    // Observa resultado da atualização para dar feedback e remover notificação
+    val updateResult by assessmentViewModel.updateResult.collectAsState()
+
+    LaunchedEffect(updateResult) {
+        updateResult?.let { success ->
+            if (success) {
+                Toast.makeText(context, "Avaliação enviada com sucesso!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Falha ao enviar avaliação", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    Column(modifier = Modifier.padding(16.dp)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
             IconButton(onClick = onCloseDrawer) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Fechar"
-                )
+                Icon(Icons.Default.Close, contentDescription = "Fechar")
             }
-
             Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = "Notificações",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+            Text("Notificações", fontWeight = FontWeight.Bold, fontSize = 18.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        AnimatedVisibility(
-            visible = showNotification,
-            enter = slideInHorizontally(initialOffsetX = { -it }),
-            exit = slideOutHorizontally(targetOffsetX = { it })
-        ) {
-            NotificationCard(
-                title = "Dom Roque Barbearia",
-                message = "E aí, Pedro! Gostou do seu corte na Dom Roque? Responda com uma nota de 1 a 5 ⭐ para nos ajudar a melhorar!",
-                onConfirm = { showNotification = false }
-            )
+        LazyColumn {
+            items(notifications, key = { it.assessmentId }) { notification ->
+                var visible by remember { mutableStateOf(true) }
+
+                AnimatedVisibility(
+                    visible = visible,
+                    enter = slideInHorizontally(initialOffsetX = { -it }),
+                    exit = slideOutHorizontally(targetOffsetX = { it }),
+                    modifier = Modifier.padding(bottom = 12.dp)
+                ) {
+                    NotificationCard(
+                        title = notification.establishmentName,
+                        message = "E aí, Gostou? Responda com uma nota de 1 a 5 ⭐ para nos ajudar a melhorar!",
+                        onConfirm = { rating, userMsg ->
+                            // Chama updateAssessment
+                            assessmentViewModel.updateAssessment(
+                                notification.assessmentId, rating.toDouble(), userMsg,
+                                (user?.token ?: 0).toString()
+                            )
+                            // Remove a notificação da lista
+                            visible = false
+                            scope.launch {
+                                kotlinx.coroutines.delay(300)
+                                notifications =
+                                    notifications.filter { it.assessmentId != notification.assessmentId }
+                            }
+                        }
+                    )
+                }
+            }
         }
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationCard(title: String, message: String, onConfirm: () -> Unit) {
+fun NotificationCard(
+    title: String,
+    message: String,
+    onConfirm: (rating: Int, message: String) -> Unit
+) {
     var selectedStars by remember { mutableStateOf(0) }
+    var userMessage by remember { mutableStateOf(TextFieldValue("")) }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .background(Color(0xFF2E004F), shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
+            .background(
+                color = Color(0xFF2E004F),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+            )
             .padding(16.dp)
     ) {
         Text(
             text = title,
             fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
             color = Color.White
         )
 
@@ -142,20 +210,41 @@ fun NotificationCard(title: String, message: String, onConfirm: () -> Unit) {
 
         Text(
             text = message,
+            fontSize = 14.sp,
             color = Color.White
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         RatingStars(selectedStars) { stars -> selectedStars = stars }
 
         if (selectedStars > 0) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedTextField(
+                value = userMessage,
+                onValueChange = { userMessage = it },
+                label = { Text("Escreva uma mensagem") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    containerColor = Color.White,
+                    focusedBorderColor = Color(0xFF2E004F),
+                    unfocusedBorderColor = Color.LightGray,
+                    focusedLabelColor = Color(0xFF2E004F),
+                    unfocusedLabelColor = Color.Gray
+                )
+            )
+
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onConfirm,
+
+            Button(
+                onClick = {
+                    onConfirm(selectedStars, userMessage.text)
+                },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(containerColor = Color.White)
             ) {
-                Text("Confirmar", color = Color(36, 12, 81))
+                Text("Confirmar", color = Color(0xFF2E004F))
             }
         }
     }
@@ -176,6 +265,7 @@ fun RatingStars(selectedStars: Int, onRatingSelected: (Int) -> Unit) {
         }
     }
 }
+
 @Composable
 fun MenuButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     Button(
@@ -192,9 +282,10 @@ fun MenuButton(icon: ImageVector, label: String, onClick: () -> Unit) {
 }
 
 
-
 @Composable
 fun DrawerHomeContent(
+    clientId: Long,
+    barbershops: List<Barbershop>,
     onCloseDrawer: () -> Unit,
     onAgendamentosClick: () -> Unit,
     onLogout: () -> Unit
@@ -220,10 +311,18 @@ fun DrawerHomeContent(
             context.startActivity(Intent(context, ProfileActivity::class.java))
         }
 
-        MenuButton(icon = Icons.Default.CalendarToday, label = "Agendamentos", onClick = onAgendamentosClick)
+        MenuButton(
+            icon = Icons.Default.CalendarToday,
+            label = "Agendamentos",
+            onClick = onAgendamentosClick
+        )
 
         MenuButton(icon = Icons.Default.Favorite, label = "Favoritos") {
-            context.startActivity(Intent(context, FavoriteActivity::class.java))
+            val intent = Intent(context, FavoriteActivity::class.java).apply {
+                putExtra("clientId", clientId)
+                putExtra("barbershops", ArrayList(barbershops))
+            }
+            context.startActivity(intent)
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -277,7 +376,10 @@ fun AppointmentsScreen(onBack: () -> Unit) {
                     barbeiro = scheduling.nameEmployee,
                     valor = "R$ ${scheduling.price}",
                     onCancel = {
-                        schedulingViewModel.fetchCancelSchedulings(context, scheduling.id) { success, message ->
+                        schedulingViewModel.fetchCancelSchedulings(
+                            context,
+                            scheduling.id
+                        ) { success, message ->
                             if (success) {
                                 schedulingViewModel.fetchSchedulings(context)
                             }

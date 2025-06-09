@@ -1,6 +1,5 @@
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -24,12 +22,25 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.luna_project.R
+import com.example.luna_project.data.models.ClientSchedulingDTOResponse
+
 
 @Composable
-fun LastVisitCard() {
+fun LastVisitCard(scheduling: ClientSchedulingDTOResponse?) {
+    if (scheduling == null) {
+        Text("Nenhuma há ultimas visitas.")
+        return
+    }
+
+    Text(
+        text = "Última Visita",
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(vertical = 16.dp)
+    )
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF2E004F)),
         modifier = Modifier.fillMaxWidth()
@@ -39,7 +50,6 @@ fun LastVisitCard() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Imagem do usuário
             Image(
                 painter = painterResource(id = R.drawable.ic_user),
                 contentDescription = null,
@@ -49,30 +59,30 @@ fun LastVisitCard() {
                 contentScale = ContentScale.Crop
             )
 
-            // Informações do usuário
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 8.dp)
             ) {
                 Text(
-                    text = "Derick Augusto",
+                    text = scheduling.nameEmployee,
                     color = Color.White,
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = "Dom Roque",
+                    text = scheduling.stablishmentName,
                     color = Color.Gray,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
 
-            // Botão Reservar
             OutlinedButton(
-                onClick = { /* ação do botão */ },
+                onClick = {
+
+                },
                 modifier = Modifier
-                    .width(100.dp) // Largura fixa para o botão
-                    .height(36.dp), // Altura fixa
+                    .width(100.dp)
+                    .height(36.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     containerColor = Color.Transparent,
                     contentColor = Color.White
